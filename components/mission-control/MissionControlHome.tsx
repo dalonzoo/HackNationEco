@@ -17,6 +17,7 @@ import { PanelKey, usePanelNav } from "@/hooks/usePanelNav";
 import { useLiveData } from "@/hooks/useLiveData";
 import { calculateCarbonFootprint, getEmployeeMedian } from "@/lib/carbon";
 import { parseDataDocument } from "@/lib/document-ingestion";
+import { calculateEsgScore } from "@/lib/esg";
 import { defaultOnboardingData } from "@/lib/mock-data";
 import type {
   ActionRecommendation,
@@ -27,6 +28,7 @@ import type {
   OnboardingData,
   OpenDataContext
 } from "@/lib/types";
+import type { ComplianceSummary } from "@/lib/ai/insights-orchestrator";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
@@ -35,6 +37,7 @@ interface InsightsResponse {
   score: EsgScoreBreakdown;
   actions: ActionRecommendation[];
   summary: string[];
+  complianceSummary: ComplianceSummary;
   source: string;
   orchestrationMode: "multi-agent-llm" | "multi-agent-fallback";
   agentTrace: { agent: string; title: string; content: string; mode: "llm" | "fallback" }[];
@@ -69,6 +72,55 @@ function employeeCountToRange(value: number): OnboardingData["employeesRange"] {
   return "500+";
 }
 
+function getCountdownTargetTime() {
+  const configured = process.env.NEXT_PUBLIC_CSRD_DEADLINE;
+  const parsed = configured ? new Date(configured).getTime() : Number.NaN;
+
+  if (Number.isFinite(parsed)) {
+    return parsed;
+  }
+
+  const fallback = new Date();
+  fallback.setFullYear(fallback.getFullYear() + 1);
+  fallback.setHours(23, 59, 59, 999);
+  return fallback.getTime();
+}
+
+function buildCountdownState(targetTime: number) {
+  const diff = Math.max(0, targetTime - Date.now());
+  return {
+    days: Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    minutes: Math.floor((diff % 3600000) / 60000),
+    seconds: Math.floor((diff % 60000) / 1000)
+  };
+}
+
+function buildFallbackComplianceSummary(params: {
+  data: OnboardingData;
+  carbon: CarbonFootprint;
+  score: EsgScoreBreakdown;
+  openData: OpenDataContext | null;
+}): ComplianceSummary {
+  const { data, carbon, score, openData } = params;
+  const missingItems = [
+    carbon.scope3 >= Math.max(carbon.scope1, carbon.scope2) ? "Mappatura emissioni fornitori e acquisti" : null,
+    openData ? `Valutazione resilienza su ${openData.climateRiskLabel.toLowerCase()}` : "Valutazione rischio climatico operativo",
+    "Struttura KPI e reporting ESG periodico"
+  ].filter((item): item is string => Boolean(item));
+
+  return {
+    headline: `${data.companyName} ha una base ESG gia' leggibile, ma il dossier richiede ancora alcune evidenze per diventare completo e difendibile.`,
+    detail: `Le priorita' riguardano soprattutto la qualita' del dato, la copertura della filiera e la formalizzazione del reporting rispetto al profilo attuale di score ${score.total}/100.`,
+    focus:
+      carbon.scope3 >= Math.max(carbon.scope1, carbon.scope2)
+        ? "Copertura Scope 3 e qualita' del dato fornitori"
+        : "Consolidamento KPI ambientali e reporting ESG",
+    missingItems,
+    readinessPct: Math.max(40, Math.min(88, Math.round(score.total * 0.72)))
+  };
+}
+
 export function MissionControlHome() {
   const reduceMotion = useReducedMotion();
   const [analysisStarted, setAnalysisStarted] = useState(false);
@@ -79,7 +131,7 @@ export function MissionControlHome() {
   const [audioBriefing, setAudioBriefing] = useState<AudioBriefingState | null>(null);
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [countdown, setCountdown] = useState({ days: 487, hours: 14, minutes: 32, seconds: 18 });
+  const [countdown, setCountdown] = useState(() => buildCountdownState(getCountdownTargetTime()));
   const [ingestionNotice, setIngestionNotice] = useState("Tracciabilita' attiva sulle sorgenti dati.");
   const [dataSources, setDataSources] = useState<DataSourceEntry[]>([
     {
@@ -95,7 +147,8 @@ export function MissionControlHome() {
 
   const localCarbon = calculateCarbonFootprint(data);
   const carbon = insights?.carbon ?? localCarbon;
-  const score = insights?.score ?? { environmental: 68, social: 76, governance: 71, total: 72, benchmark: 64, deltaVsBenchmark: 8 };
+  const localScore = calculateEsgScore(data, localCarbon);
+  const score = insights?.score ?? localScore;
   const actions = insights?.actions ?? [];
   const { feed, counter, updatedAt } = useLiveData(openData);
   const aiMode = analysisStarted ? insights?.orchestrationMode ?? "loading" : "loading";
@@ -189,15 +242,9 @@ export function MissionControlHome() {
   }, [data, openData, insights]);
 
   useEffect(() => {
-    const target = new Date("2027-07-28T23:59:59+02:00").getTime();
+    const target = getCountdownTargetTime();
     const interval = window.setInterval(() => {
-      const diff = Math.max(0, target - Date.now());
-      setCountdown({
-        days: Math.floor(diff / 86400000),
-        hours: Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000)
-      });
+      setCountdown(buildCountdownState(target));
     }, 1000);
 
     return () => window.clearInterval(interval);
@@ -238,7 +285,11 @@ export function MissionControlHome() {
         id: "ai-insights",
         label: "AI INSIGHTS",
         kind: "ai",
-        origin: insights.source.startsWith("regolo") ? "Regolo AI multi-agent" : "Motore locale multi-agent",
+        origin: insights.source.startsWith("gemini")
+          ? "Gemini AI multi-agent"
+          : insights.source.startsWith("regolo")
+            ? "Regolo AI multi-agent"
+            : "Motore locale multi-agent",
         updatedAt,
         fields: ["scope1", "scope2", "scope3", "actions"],
         note:
@@ -313,7 +364,7 @@ export function MissionControlHome() {
     }
 
     return [
-      { id: "planner", label: "planner", detail: "completed", status: "done" },
+      { id: "planner", label: "planner", detail: "running", status: "running" },
       { id: "benchmark", label: "benchmark", detail: "running", status: "running" },
       { id: "compliance", label: "compliance", detail: "running", status: "running" },
       { id: "action", label: "action", detail: "running", status: "running" }
@@ -349,7 +400,14 @@ export function MissionControlHome() {
     const response = await fetch("/api/reports/csrd", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data, carbon, score, actions })
+      body: JSON.stringify({
+        data,
+        carbon,
+        score,
+        actions,
+        openData,
+        complianceSummary: insights?.complianceSummary
+      })
     });
 
     if (!response.ok) return;
@@ -375,7 +433,8 @@ export function MissionControlHome() {
           companyName: data.companyName,
           summary: insights.summary,
           actions: insights.actions,
-          openData
+          openData,
+          complianceSummary: insights.complianceSummary
         })
       });
 
@@ -474,16 +533,21 @@ export function MissionControlHome() {
     }
 
     if (panel === "COMPLIANCE") {
-      const complianceTrace =
-        insights?.agentTrace.find((agent) => agent.agent === "compliance")?.content ??
-        "Il motore compliance sta componendo i passaggi prioritari per portarti al report finale.";
+      const complianceSummary =
+        insights?.complianceSummary ??
+        buildFallbackComplianceSummary({
+          data,
+          carbon: localCarbon,
+          score: localScore,
+          openData
+        });
 
       return (
         <PanelCompliance
           countdown={countdown}
           score={score.total}
           actionsCount={actions.length}
-          complianceTrace={complianceTrace}
+          complianceSummary={complianceSummary}
           orchestrationMode={insights?.orchestrationMode ?? "multi-agent-fallback"}
           briefing={audioBriefing}
           isBriefingLoading={isAudioLoading}

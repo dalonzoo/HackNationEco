@@ -1,0 +1,44 @@
+{
+  "companyName": "Nimbus Advisory S.r.l.",
+  "sector": "Servizi",
+  "atecoCode": "70.22",
+  "city": "Milano",
+  "employeesRange": "50-99",
+  "revenueRange": "10-25M",
+  "budgetRange": "10k-50k",
+  "facilities": 1,
+  "electricityKwh": 128000,
+  "gasM3": 4200,
+  "waterM3": 860,
+  "dieselKm": 4800,
+  "petrolKm": 7200,
+  "electricKm": 16500,
+  "flightsKm": 68400,
+  "trainKm": 41200,
+  "localSuppliersPct": 72,
+  "wasteKg": 6200,
+  "recyclingPct": 88,
+  "travelPlanning": {
+    "annualTrips": 264,
+    "employeeTravelers": 38,
+    "shortHaulFlightSharePct": 57,
+    "railEligibleTripSharePct": 74,
+    "advanceBookingDays": 6,
+    "virtualMeetingSharePct": 41,
+    "hotelPolicyCoveragePct": 58,
+    "approvalWorkflowCoveragePct": 49,
+    "lastMinuteBookingSharePct": 34,
+    "weekendExtensionRiskPct": 18,
+    "hotelNightsAnnual": 318,
+    "preferredRailCorridors": [
+      "Milano-Roma",
+      "Milano-Bologna",
+      "Milano-Torino"
+    ],
+    "topTripReasons": [
+      "workshop clienti enterprise",
+      "delivery progettuale on-site",
+      "business development e conferenze"
+    ]
+  }
+}

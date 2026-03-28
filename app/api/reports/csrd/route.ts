@@ -1,5 +1,7 @@
 import { buildCsrReportSections } from "@/lib/report";
+import type { ComplianceSummary } from "@/lib/ai/insights-orchestrator";
 import type { ActionRecommendation, CarbonFootprint, EsgScoreBreakdown, OnboardingData } from "@/lib/types";
+import type { OpenDataContext } from "@/lib/types";
 import { jsPDF } from "jspdf";
 
 export const runtime = "nodejs";
@@ -16,9 +18,11 @@ export async function POST(request: Request) {
     carbon: CarbonFootprint;
     score: EsgScoreBreakdown;
     actions: ActionRecommendation[];
+    openData?: OpenDataContext;
+    complianceSummary?: ComplianceSummary;
   };
 
-  const sections = buildCsrReportSections(body.data, body.carbon, body.score, body.actions);
+  const sections = buildCsrReportSections(body.data, body.carbon, body.score, body.actions, body.openData, body.complianceSummary);
   const doc = new jsPDF({
     unit: "pt",
     format: "a4"
@@ -38,7 +42,7 @@ export async function POST(request: Request) {
   cursorY += 28;
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(`Report CSRD demo per ${body.data.companyName}`, margin, cursorY);
+  doc.text(`Report CSRD preliminare per ${body.data.companyName}`, margin, cursorY);
   cursorY += 18;
   doc.text(`Punteggio ESG ${body.score.total}/100 | Emissioni totali ${body.carbon.total.toFixed(2)} tCO2eq`, margin, cursorY);
 

@@ -1,4 +1,5 @@
 import { buildBriefing } from "@/lib/insights";
+import type { ComplianceSummary } from "@/lib/ai/insights-orchestrator";
 import type { ActionRecommendation, BriefingResponse, OpenDataContext } from "@/lib/types";
 import { NextResponse } from "next/server";
 
@@ -60,9 +61,12 @@ export async function POST(request: Request) {
     summary: string[];
     actions: ActionRecommendation[];
     openData: OpenDataContext;
+    complianceSummary?: ComplianceSummary;
   };
 
-  const fallback = withBriefingMeta(buildBriefing(body.companyName, body.summary, body.actions, body.openData));
+  const fallback = withBriefingMeta(
+    buildBriefing(body.companyName, body.summary, body.actions, body.openData, body.complianceSummary?.focus)
+  );
 
   if (process.env.ELEVENLABS_API_KEY) {
     try {

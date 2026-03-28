@@ -1,54 +1,14 @@
 "use client";
 
+import type { ComplianceSummary } from "@/lib/ai/insights-orchestrator";
 import type { BriefingResponse } from "@/lib/types";
 import { motion } from "framer-motion";
-
-const readinessPercentage = 73;
-const readinessFocus = "Raccolta KPI e narrativa CSRD in consolidamento";
-const defaultMissingItems = ["ESRS E1", "ESRS E2", "GRI 305"];
-
-function condenseText(text: string, maxLength: number) {
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength).trimEnd()}...`;
-}
-
-function stripMarkdown(text: string) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/\*(.*?)\*/g, "$1")
-    .replace(/`(.*?)`/g, "$1")
-    .replace(/^\s*[-*]\s+/gm, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function formatComplianceTrace(trace: string) {
-  const cleanTrace = stripMarkdown(trace);
-  const sentences = cleanTrace.split(/(?<=[.!?])\s+/).filter(Boolean);
-  const headline = condenseText(sentences[0] ?? cleanTrace, 150);
-  const detail = condenseText(sentences.slice(1).join(" "), 220);
-
-  const extractedChecks = cleanTrace.toLowerCase().startsWith("gap principali:")
-    ? cleanTrace
-        .replace(/^gap principali:\s*/i, "")
-        .split(/,\s*/g)
-        .map((item) => item.replace(/[.!?]+$/g, "").trim())
-        .filter((item) => item.length > 3)
-        .slice(0, 3)
-    : [];
-
-  return {
-    headline,
-    detail,
-    checks: extractedChecks.length ? extractedChecks : defaultMissingItems
-  };
-}
 
 export function PanelCompliance({
   countdown,
   score,
   actionsCount,
-  complianceTrace,
+  complianceSummary,
   orchestrationMode,
   briefing,
   isBriefingLoading,
@@ -59,7 +19,7 @@ export function PanelCompliance({
   countdown: { days: number; hours: number; minutes: number; seconds: number };
   score: number;
   actionsCount: number;
-  complianceTrace: string;
+  complianceSummary: ComplianceSummary;
   orchestrationMode: "multi-agent-llm" | "multi-agent-fallback";
   briefing: BriefingResponse | null;
   isBriefingLoading: boolean;
@@ -75,7 +35,7 @@ export function PanelCompliance({
         minute: "2-digit"
       })
     : null;
-  const formattedCompliance = formatComplianceTrace(complianceTrace);
+  const briefingStatusLabel = briefing ? "Generato" : canGenerateBriefing ? "Pronto" : "In attesa";
 
   return (
     <div className="scrollbar-hidden grid min-h-full gap-6 overflow-y-auto p-5 lg:p-6">
@@ -108,37 +68,33 @@ export function PanelCompliance({
                 <div className="mono-font text-xs uppercase tracking-[0.22em] text-muted">READINESS TRACK</div>
                 <div className="mt-2 text-sm leading-6 text-muted">Stato della preparazione CSRD rispetto al dossier iniziale.</div>
               </div>
-              <div className="mono-font text-3xl text-accent">{readinessPercentage}%</div>
+              <div className="mono-font text-3xl text-accent">{complianceSummary.readinessPct}%</div>
             </div>
 
             <div className="mt-5 h-3 overflow-hidden bg-[rgba(255,255,255,0.05)]">
               <div
                 className="h-full bg-[linear-gradient(90deg,rgba(74,158,255,0.92),rgba(0,255,136,0.92))] shadow-[0_0_24px_rgba(0,255,136,0.2)]"
-                style={{ width: `${readinessPercentage}%` }}
+                style={{ width: `${complianceSummary.readinessPct}%` }}
               />
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
-                <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Indica</div>
-                <div className="mt-2 text-sm leading-6 text-text">Quota di dossier gia' impostata correttamente.</div>
-              </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
               <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
                 <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Focus attuale</div>
-                <div className="mt-2 text-sm leading-6 text-text">{readinessFocus}</div>
+                <div className="mt-2 text-sm leading-6 text-text">{complianceSummary.focus}</div>
               </div>
               <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
                 <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Prossimo passo</div>
-                <div className="mt-2 text-sm leading-6 text-text">Chiudere i blocchi mancanti per una lettura CSRD completa.</div>
+                <div className="mt-2 text-sm leading-6 text-text">Raccogliere i dati mancanti e formalizzare i presidi necessari per completare la lettura CSRD.</div>
               </div>
             </div>
 
             <div className="mt-5">
-              <div className="mono-font text-[10px] uppercase tracking-[0.22em] text-muted">Blocchi ancora da consolidare</div>
+              <div className="mono-font text-[10px] uppercase tracking-[0.22em] text-muted">Dati e presidi ancora mancanti</div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              {formattedCompliance.checks.map((item) => (
+              {complianceSummary.missingItems.map((item) => (
                 <div
                   key={item}
                   className="mono-font border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-text"
@@ -212,24 +168,28 @@ export function PanelCompliance({
           <div className="mono-font text-xs uppercase tracking-[0.22em] text-muted">SINTESI COMPLIANCE</div>
           <div className="mt-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.015)] p-4">
             <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Messaggio principale AI</div>
-            <div className="mt-2 text-base leading-7 text-text">{formattedCompliance.headline}</div>
+            <div className="mt-2 text-base leading-7 text-text">{complianceSummary.headline}</div>
           </div>
-          {formattedCompliance.detail ? (
+          {complianceSummary.detail ? (
             <div className="mt-3 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.015)] p-4">
               <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Perche' conta</div>
-              <div className="mt-2 text-sm leading-7 text-muted">{formattedCompliance.detail}</div>
+              <div className="mt-2 text-sm leading-7 text-muted">{complianceSummary.detail}</div>
             </div>
           ) : null}
         </div>
 
         <div className="grid gap-3">
           <div className="mission-section p-4">
-            <div className="hud-label">AZIENDE NELLA TUA SITUAZIONE</div>
-            <div className="mono-font mt-2 text-3xl text-text">127.000</div>
+            <div className="hud-label">GAP RILEVATI</div>
+            <div className="mono-font mt-2 text-3xl text-text">{complianceSummary.missingItems.length}</div>
+            <div className="mono-font mt-3 text-[10px] uppercase tracking-[0.18em] text-muted">dati o presidi ancora mancanti</div>
           </div>
           <div className="mission-section p-4">
-            <div className="hud-label">GIA' ATTIVATE CON ECOSIGNAL</div>
-            <div className="mono-font mt-2 text-3xl text-accent">3.400</div>
+            <div className="hud-label">AUDIO BRIEFING</div>
+            <div className="mono-font mt-2 text-3xl text-accent">{briefingStatusLabel}</div>
+            <div className="mono-font mt-3 text-[10px] uppercase tracking-[0.18em] text-muted">
+              {briefing ? "briefing della giornata disponibile" : "generazione collegata ai risultati AI"}
+            </div>
           </div>
           <div className="mission-section p-4">
             <div className="hud-label">MISSION STATUS</div>

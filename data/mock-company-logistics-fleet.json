@@ -1,0 +1,44 @@
+{
+  "companyName": "PortoSud Logistics S.p.A.",
+  "sector": "Logistica",
+  "atecoCode": "52.29",
+  "city": "Napoli",
+  "employeesRange": "500+",
+  "revenueRange": "50M+",
+  "budgetRange": "150k+",
+  "facilities": 6,
+  "electricityKwh": 1240000,
+  "gasM3": 28600,
+  "waterM3": 9400,
+  "dieselKm": 462000,
+  "petrolKm": 24000,
+  "electricKm": 36000,
+  "flightsKm": 9200,
+  "trainKm": 4800,
+  "localSuppliersPct": 26,
+  "wasteKg": 84200,
+  "recyclingPct": 49,
+  "travelPlanning": {
+    "annualTrips": 96,
+    "employeeTravelers": 22,
+    "shortHaulFlightSharePct": 24,
+    "railEligibleTripSharePct": 33,
+    "advanceBookingDays": 4,
+    "virtualMeetingSharePct": 12,
+    "hotelPolicyCoveragePct": 28,
+    "approvalWorkflowCoveragePct": 37,
+    "lastMinuteBookingSharePct": 43,
+    "weekendExtensionRiskPct": 12,
+    "hotelNightsAnnual": 104,
+    "preferredRailCorridors": [
+      "Napoli-Roma",
+      "Napoli-Bari",
+      "Napoli-Bologna"
+    ],
+    "topTripReasons": [
+      "audit hub e magazzini",
+      "negoziazione partner trasporto",
+      "gestione emergenze operative"
+    ]
+  }
+}
