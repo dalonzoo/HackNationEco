@@ -33,8 +33,15 @@ export function LiveFeed({ metrics }: { metrics: FeedMetric[] }) {
         sorgenti: open data live/demo - refresh 30s
       </div>
       <div className="mt-4 flex flex-1 flex-col gap-3 overflow-y-auto pr-1">
-        {metrics.map((metric) => (
-          <div key={metric.id} className="border border-[rgba(0,255,136,0.08)] bg-[rgba(6,12,8,0.55)] p-3">
+        {metrics.map((metric, index) => (
+          <motion.div
+            key={metric.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, delay: index * 0.05 }}
+            className="relative overflow-hidden border border-[rgba(0,255,136,0.08)] bg-[rgba(6,12,8,0.55)] p-3"
+          >
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_90%_20%,rgba(255,255,255,0.06),transparent_22%)]" />
             <div className="mono-font text-[10px] uppercase tracking-[0.24em] text-muted">{metric.label}</div>
             <motion.div
               key={`${metric.id}-${metric.value}`}
@@ -52,7 +59,7 @@ export function LiveFeed({ metrics }: { metrics: FeedMetric[] }) {
                 transition={{ duration: 0.4, ease: "easeOut" }}
               />
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </aside>

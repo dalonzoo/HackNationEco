@@ -126,15 +126,44 @@ textarea {
   box-shadow:
     inset 0 0 0 1px rgba(0, 255, 136, 0.03),
     0 24px 80px rgba(0, 0, 0, 0.42),
-    0 0 60px rgba(74, 158, 255, 0.06);
+    0 0 60px rgba(74, 158, 255, 0.06),
+    0 0 140px rgba(0, 255, 136, 0.04);
   backdrop-filter: blur(12px);
 }
 
 .mission-section {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(9, 16, 12, 0.86), rgba(6, 11, 9, 0.92)),
     linear-gradient(90deg, rgba(0, 255, 136, 0.04), rgba(74, 158, 255, 0.02));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 14px 34px rgba(0, 0, 0, 0.18);
+  transition:
+    border-color 0.28s ease,
+    box-shadow 0.28s ease,
+    transform 0.28s ease;
+}
+
+.mission-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.045) 50%, transparent 100%);
+  opacity: 0;
+  transform: translateX(-32%);
+  transition:
+    opacity 0.35s ease,
+    transform 0.55s ease;
+}
+
+.mission-section:hover::before {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .hud-label {
@@ -255,6 +284,88 @@ textarea {
   transform: translateX(8px);
 }
 
+.signal-dot {
+  position: relative;
+  display: inline-flex;
+  height: 0.55rem;
+  width: 0.55rem;
+  border-radius: 9999px !important;
+  background: var(--accent);
+  box-shadow:
+    0 0 0 0 rgba(0, 255, 136, 0.34),
+    0 0 22px rgba(0, 255, 136, 0.42);
+  animation: signalPulse 1.8s ease-out infinite;
+}
+
+.signal-dot::after {
+  content: "";
+  position: absolute;
+  inset: -0.35rem;
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  border-radius: 9999px !important;
+}
+
+.topbar-glow {
+  background:
+    radial-gradient(circle at 10% 50%, rgba(0, 255, 136, 0.12), transparent 0 18%),
+    radial-gradient(circle at 84% 10%, rgba(74, 158, 255, 0.12), transparent 0 16%);
+}
+
+.data-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.08) 46%, transparent 60%);
+  transform: translateX(-130%);
+  animation: dataSweep 4.6s ease-in-out infinite;
+}
+
+.upload-orbit {
+  position: absolute;
+  border: 1px solid rgba(0, 255, 136, 0.12);
+  border-radius: 9999px !important;
+  animation: slowSpin 16s linear infinite;
+}
+
+.scan-sweep::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 25%, rgba(0, 255, 136, 0.12) 50%, transparent 75%);
+  transform: translateX(-120%);
+  animation: scanSweep 3.8s ease-in-out infinite;
+}
+
+.launch-armed {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 255, 136, 0.06),
+    0 0 0 1px rgba(0, 255, 136, 0.12),
+    0 18px 44px rgba(0, 255, 136, 0.16),
+    0 0 56px rgba(74, 158, 255, 0.12);
+}
+
+.nav-button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    color 0.22s ease;
+}
+
+.nav-button:hover:not(:disabled),
+.nav-button:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.soft-float {
+  animation: softFloat 7s ease-in-out infinite;
+}
+
 .strip-grid {
   position: absolute;
   inset: 0;
@@ -321,6 +432,75 @@ textarea {
   }
 }
 
+@keyframes signalPulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(0, 255, 136, 0.34),
+      0 0 20px rgba(0, 255, 136, 0.32);
+  }
+  70% {
+    box-shadow:
+      0 0 0 12px rgba(0, 255, 136, 0),
+      0 0 28px rgba(0, 255, 136, 0.44);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(0, 255, 136, 0),
+      0 0 16px rgba(0, 255, 136, 0.24);
+  }
+}
+
+@keyframes dataSweep {
+  0%,
+  100% {
+    transform: translateX(-130%);
+    opacity: 0;
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(130%);
+    opacity: 0;
+  }
+}
+
+@keyframes scanSweep {
+  0%,
+  100% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  20%,
+  68% {
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes slowSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes softFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
@@ -328,7 +508,12 @@ textarea {
 
   .status-marquee,
   .loading-progress,
-  .mission-launch-button::before {
+  .mission-launch-button::before,
+  .signal-dot,
+  .data-sheen::after,
+  .upload-orbit,
+  .scan-sweep::before,
+  .soft-float {
     animation: none;
   }
 

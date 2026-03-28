@@ -114,7 +114,8 @@ export function MissionPrepDeck({
               initial={reduceMotion ? false : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: reduceMotion ? 0 : index * 0.06, duration: 0.22 }}
-              className={`group relative overflow-hidden border p-4 text-left transition ${
+              whileHover={reduceMotion || !isReady ? undefined : { y: -4, scale: 1.01 }}
+              className={`group data-sheen relative overflow-hidden border p-4 text-left transition ${
                 isReady
                   ? "border-[rgba(0,255,136,0.14)] bg-[linear-gradient(180deg,rgba(8,14,10,0.92),rgba(7,12,9,0.96))]"
                   : "border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(7,11,9,0.84),rgba(6,10,8,0.92))]"
@@ -122,6 +123,7 @@ export function MissionPrepDeck({
                 isReady ? "hover:-translate-y-1 hover:border-[rgba(0,255,136,0.22)]" : "cursor-not-allowed"
               }`}
             >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_14%,rgba(74,158,255,0.14),transparent_24%),radial-gradient(circle_at_82%_86%,rgba(0,255,136,0.1),transparent_28%)] opacity-0 transition duration-300 group-hover:opacity-100" />
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="mono-font text-[10px] uppercase tracking-[0.28em] text-muted">{card.panel}</div>
@@ -157,6 +159,21 @@ export function MissionPrepDeck({
                     />
                   )}
                 </AnimatePresence>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className="mono-font text-[10px] uppercase tracking-[0.22em] text-[rgba(232,242,235,0.55)]">
+                  {isReady ? "click to enter" : "awaiting unlock"}
+                </div>
+                <div
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    card.status === "ready"
+                      ? "bg-accent shadow-[0_0_18px_rgba(0,255,136,0.5)]"
+                      : card.status === "loading"
+                        ? "bg-[var(--blue-data)] shadow-[0_0_18px_rgba(74,158,255,0.4)]"
+                        : "bg-[rgba(255,255,255,0.14)]"
+                  }`}
+                />
               </div>
 
               {isActive ? (

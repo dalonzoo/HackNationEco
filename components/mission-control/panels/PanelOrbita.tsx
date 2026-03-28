@@ -1,7 +1,7 @@
 "use client";
 
 import type { ActionRecommendation } from "@/lib/types";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const orbitPositions = [
@@ -135,8 +135,15 @@ export function PanelOrbita({
           <div className="mono-font text-xs uppercase tracking-[0.24em] text-muted">DETTAGLIO AZIONE</div>
 
           <div className="scrollbar-hidden mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
-            {selectedAction ? (
-              <>
+            <AnimatePresence mode="wait">
+              {selectedAction ? (
+                <motion.div
+                  key={selectedAction.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.24, ease: "easeOut" }}
+                >
                 <div className="text-sm leading-6 text-text">{selectedAction.title}</div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -172,12 +179,15 @@ export function PanelOrbita({
 
                 {selectedAction.directActions?.length ? (
                   <div className="mt-4 space-y-2">
-                    {selectedAction.directActions.map((directAction) => (
-                      <a
+                    {selectedAction.directActions.map((directAction, index) => (
+                      <motion.a
                         key={directAction.id}
                         href={directAction.href}
                         target="_blank"
                         rel="noreferrer"
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
                         className="block border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3 transition hover:border-[rgba(0,255,136,0.25)] hover:bg-[rgba(0,255,136,0.05)]"
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -187,16 +197,23 @@ export function PanelOrbita({
                           </div>
                         </div>
                         <div className="mt-2 text-xs leading-6 text-muted">{directAction.description}</div>
-                      </a>
+                      </motion.a>
                     ))}
                   </div>
                 ) : null}
-              </>
-            ) : (
-              <div className="border border-dashed border-[rgba(255,255,255,0.1)] p-4 text-sm leading-7 text-muted">
-                Nessuna azione selezionata.
-              </div>
-            )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty-action"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="border border-dashed border-[rgba(255,255,255,0.1)] p-4 text-sm leading-7 text-muted"
+                >
+                  Nessuna azione selezionata.
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </aside>

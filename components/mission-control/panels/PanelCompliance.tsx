@@ -3,6 +3,47 @@
 import type { BriefingResponse } from "@/lib/types";
 import { motion } from "framer-motion";
 
+const readinessPercentage = 73;
+const readinessFocus = "Raccolta KPI e narrativa CSRD in consolidamento";
+const defaultMissingItems = ["ESRS E1", "ESRS E2", "GRI 305"];
+
+function condenseText(text: string, maxLength: number) {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trimEnd()}...`;
+}
+
+function stripMarkdown(text: string) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`(.*?)`/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function formatComplianceTrace(trace: string) {
+  const cleanTrace = stripMarkdown(trace);
+  const sentences = cleanTrace.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const headline = condenseText(sentences[0] ?? cleanTrace, 150);
+  const detail = condenseText(sentences.slice(1).join(" "), 220);
+
+  const extractedChecks = cleanTrace.toLowerCase().startsWith("gap principali:")
+    ? cleanTrace
+        .replace(/^gap principali:\s*/i, "")
+        .split(/,\s*/g)
+        .map((item) => item.replace(/[.!?]+$/g, "").trim())
+        .filter((item) => item.length > 3)
+        .slice(0, 3)
+    : [];
+
+  return {
+    headline,
+    detail,
+    checks: extractedChecks.length ? extractedChecks : defaultMissingItems
+  };
+}
+
 export function PanelCompliance({
   countdown,
   score,
@@ -34,6 +75,7 @@ export function PanelCompliance({
         minute: "2-digit"
       })
     : null;
+  const formattedCompliance = formatComplianceTrace(complianceTrace);
 
   return (
     <div className="scrollbar-hidden grid min-h-full gap-6 overflow-y-auto p-5 lg:p-6">
@@ -59,13 +101,60 @@ export function PanelCompliance({
               {countdown.minutes} MIN - {countdown.seconds} SEC
             </div>
           </motion.div>
+
+          <div className="mission-section overflow-hidden p-5 lg:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="mono-font text-xs uppercase tracking-[0.22em] text-muted">READINESS TRACK</div>
+                <div className="mt-2 text-sm leading-6 text-muted">Stato della preparazione CSRD rispetto al dossier iniziale.</div>
+              </div>
+              <div className="mono-font text-3xl text-accent">{readinessPercentage}%</div>
+            </div>
+
+            <div className="mt-5 h-3 overflow-hidden bg-[rgba(255,255,255,0.05)]">
+              <div
+                className="h-full bg-[linear-gradient(90deg,rgba(74,158,255,0.92),rgba(0,255,136,0.92))] shadow-[0_0_24px_rgba(0,255,136,0.2)]"
+                style={{ width: `${readinessPercentage}%` }}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
+                <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Indica</div>
+                <div className="mt-2 text-sm leading-6 text-text">Quota di dossier gia' impostata correttamente.</div>
+              </div>
+              <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
+                <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Focus attuale</div>
+                <div className="mt-2 text-sm leading-6 text-text">{readinessFocus}</div>
+              </div>
+              <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] p-3">
+                <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Prossimo passo</div>
+                <div className="mt-2 text-sm leading-6 text-text">Chiudere i blocchi mancanti per una lettura CSRD completa.</div>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="mono-font text-[10px] uppercase tracking-[0.22em] text-muted">Blocchi ancora da consolidare</div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {formattedCompliance.checks.map((item) => (
+                <div
+                  key={item}
+                  className="mono-font border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-text"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="mission-section flex flex-col p-4">
-          <div className="mono-font text-xs uppercase tracking-[0.24em] text-muted">BRIEFING GIORNALIERO AUDIO</div>
+          <div className="mono-font text-xs uppercase tracking-[0.24em] text-muted">AUDIO BRIEFING</div>
           <div className="mt-2 display-font text-2xl leading-none text-text">DAILY ESG PULSE</div>
           <div className="mt-3 text-sm leading-6 text-muted">
-            Genera un briefing vocale con il quadro del giorno, le priorita' ESG e le azioni piu' urgenti.
+            Briefing vocale con priorita' ESG della giornata e azioni piu' urgenti.
           </div>
 
           <button
@@ -112,23 +201,25 @@ export function PanelCompliance({
             </>
           ) : (
             <div className="mt-4 border border-dashed border-[rgba(255,255,255,0.1)] p-3 text-sm leading-6 text-muted">
-              Il briefing usa score, open data e azioni generate dal motore multi-agent. Premi il comando sopra per creare l&apos;audio del giorno.
+              Usa score, open data e azioni del motore multi-agent per generare l&apos;audio del giorno.
             </div>
           )}
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.56fr_0.44fr]">
-        <div className="space-y-4">
-          <div className="mono-font text-xs uppercase tracking-[0.22em] text-muted">73% completato</div>
-          <div className="h-4 bg-[rgba(255,255,255,0.05)]">
-            <div className="h-full w-[73%] bg-accent" />
+        <div className="mission-section p-5 lg:p-6">
+          <div className="mono-font text-xs uppercase tracking-[0.22em] text-muted">SINTESI COMPLIANCE</div>
+          <div className="mt-4 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.015)] p-4">
+            <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Messaggio principale AI</div>
+            <div className="mt-2 text-base leading-7 text-text">{formattedCompliance.headline}</div>
           </div>
-          <div className="mono-font text-xs uppercase tracking-[0.2em] text-muted">Mancano: ESRS E1 - ESRS E2 - GRI 305</div>
-
-          <div className="border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.015)] p-4 text-sm leading-7 text-muted">
-            {complianceTrace}
-          </div>
+          {formattedCompliance.detail ? (
+            <div className="mt-3 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.015)] p-4">
+              <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-muted">Perche' conta</div>
+              <div className="mt-2 text-sm leading-7 text-muted">{formattedCompliance.detail}</div>
+            </div>
+          ) : null}
         </div>
 
         <div className="grid gap-3">

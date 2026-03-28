@@ -1,5 +1,7 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
+
 export function TopBar({
   company,
   aiMode,
@@ -15,11 +17,13 @@ export function TopBar({
   showPrimaryAction?: boolean;
   onPrimaryAction: () => void;
 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <header className="mission-section relative z-10 flex h-12 items-center justify-between gap-3 px-3 lg:px-4">
+    <header className="mission-section topbar-glow relative z-10 flex h-12 items-center justify-between gap-3 px-3 lg:px-4">
       <div className="flex min-w-0 items-center gap-2 lg:gap-3">
         <div className="display-font flex items-center gap-2 text-2xl uppercase tracking-[0.18em] text-text">
-          <span className="inline-flex h-2 w-2 animate-pulse bg-accent" />
+          <span className="signal-dot" />
           EcoSignal
         </div>
         <span className="mono-font hidden border border-[rgba(0,255,136,0.2)] px-2 py-1 text-[10px] uppercase tracking-[0.22em] text-muted sm:inline-flex">
@@ -45,18 +49,19 @@ export function TopBar({
       <div className="mono-font hidden min-w-0 items-center gap-4 truncate text-[10px] uppercase tracking-[0.22em] text-muted xl:flex">
         <span>Sistema attivo</span>
         <span>Dati agg. {updatedAt}</span>
-        <span>3.400 aziende</span>
         <span>{company}</span>
       </div>
 
       {showPrimaryAction ? (
-        <button
+        <motion.button
           type="button"
           onClick={onPrimaryAction}
-          className="mono-font border border-[rgba(0,255,136,0.28)] px-3 py-2 text-[10px] uppercase tracking-[0.26em] text-accent"
+          whileHover={reduceMotion ? undefined : { y: -1 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+          className="nav-button data-sheen mono-font border border-[rgba(0,255,136,0.28)] bg-[rgba(0,255,136,0.04)] px-3 py-2 text-[10px] uppercase tracking-[0.26em] text-accent"
         >
           {primaryLabel}
-        </button>
+        </motion.button>
       ) : null}
     </header>
   );

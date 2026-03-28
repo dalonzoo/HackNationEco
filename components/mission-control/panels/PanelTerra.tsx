@@ -2,6 +2,7 @@
 
 import { LiveFeed, type FeedMetric } from "@/components/mission-control/LiveFeed";
 import type { OpenDataContext } from "@/lib/types";
+import { motion } from "framer-motion";
 
 export function PanelTerra({
   openData,
@@ -41,27 +42,38 @@ export function PanelTerra({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="mission-section p-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mission-section p-4">
             <div className="hud-label">ARIA - {openData.city.toUpperCase()}</div>
             <div className="mono-font mt-3 text-4xl text-accent">{openData.airQualityIndex}</div>
             <div className="mono-font mt-2 text-xs uppercase tracking-[0.18em] text-muted">{openData.airQualityLabel}</div>
-          </div>
-          <div className="mission-section p-4">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mission-section p-4"
+          >
             <div className="hud-label">TREND CLIMATICO</div>
             <div className="mono-font mt-3 text-4xl text-text">+{openData.weeklyTemperatureDelta.toFixed(1)} C</div>
             <div className="mono-font mt-2 text-xs uppercase tracking-[0.18em] text-muted">
               rischio {openData.climateRiskLabel}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         <div className="mission-section min-h-0 p-5">
           <div className="hud-label">NOTE DAL TERRITORIO</div>
           <div className="mt-4 space-y-3">
-            {openData.notes.map((note) => (
-              <div key={note} className="border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-3 text-sm leading-6 text-muted">
+            {openData.notes.map((note, index) => (
+              <motion.div
+                key={note}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.22, delay: index * 0.05 }}
+                className="border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.02)] p-3 text-sm leading-6 text-muted"
+              >
                 {note}
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -70,11 +82,17 @@ export function PanelTerra({
           </div>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {openData.incentives.map((item) => (
-              <div key={item} className="border border-[rgba(240,160,48,0.18)] bg-[rgba(240,160,48,0.06)] p-3">
+            {openData.incentives.map((item, index) => (
+              <motion.div
+                key={item}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, delay: index * 0.06 }}
+                className="border border-[rgba(240,160,48,0.18)] bg-[rgba(240,160,48,0.06)] p-3"
+              >
                 <div className="mono-font text-[10px] uppercase tracking-[0.2em] text-[var(--amber)]">Incentivo</div>
                 <div className="mt-2 text-sm leading-6 text-text">{item}</div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
