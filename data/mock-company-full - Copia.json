@@ -1,0 +1,44 @@
+{
+  "companyName": "Tecnomat Aurora S.p.A.",
+  "sector": "Manifattura",
+  "atecoCode": "25.62",
+  "city": "Bologna",
+  "employeesRange": "150-300",
+  "revenueRange": "25-50M",
+  "budgetRange": "50k-150k",
+  "facilities": 3,
+  "electricityKwh": 335000,
+  "gasM3": 1800,
+  "waterM3": 6900,
+  "dieselKm": 84500,
+  "petrolKm": 9500,
+  "electricKm": 2000,
+  "flightsKm": 26500,
+  "trainKm": 16400,
+  "localSuppliersPct": 44,
+  "wasteKg": 58600,
+  "recyclingPct": 71,
+  "travelPlanning": {
+    "annualTrips": 188,
+    "employeeTravelers": 54,
+    "shortHaulFlightSharePct": 62,
+    "railEligibleTripSharePct": 68,
+    "advanceBookingDays": 8,
+    "virtualMeetingSharePct": 22,
+    "hotelPolicyCoveragePct": 46,
+    "approvalWorkflowCoveragePct": 55,
+    "lastMinuteBookingSharePct": 38,
+    "weekendExtensionRiskPct": 29,
+    "hotelNightsAnnual": 420,
+    "preferredRailCorridors": [
+      "Aprilia-Latina",
+      "Napoli-Roma",
+      "Bari-Roma"
+    ],
+    "topTripReasons": [
+      "visite commerciali clienti automotive",
+      "audit fornitori e qualita'",
+      "fiere tecniche e trasferte manageriali"
+    ]
+  }
+}

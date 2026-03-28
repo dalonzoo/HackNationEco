@@ -91,13 +91,26 @@ export function MissionControlHome() {
   }, []);
 
   useEffect(() => {
+    setOpenData(null);
+    let cancelled = false;
+
     async function loadOpenData() {
       const response = await fetch(`/api/open-data/context?city=${encodeURIComponent(data.city)}&sector=${encodeURIComponent(data.sector)}`);
+      if (!response.ok) return;
+      if (cancelled) return;
       setOpenData((await response.json()) as OpenDataContext);
     }
 
     void loadOpenData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [data.city, data.sector]);
+
+  useEffect(() => {
+    setInsights(null);
+  }, [data]);
 
   useEffect(() => {
     if (!openData) return;
@@ -292,7 +305,9 @@ export function MissionControlHome() {
             for (const file of files) {
               try {
                 const parsed = await parseDataDocument(file);
-                if (Object.keys(parsed.patch).length) {
+                if (parsed.applyMode === "replace" && parsed.data) {
+                  setData(parsed.data);
+                } else if (Object.keys(parsed.patch).length) {
                   setData((current) => ({ ...current, ...parsed.patch }));
                 }
                 upsertDataSource(parsed.source);
@@ -336,7 +351,11 @@ export function MissionControlHome() {
           onPrimaryAction={() => setActivePanel("SCANNER")}
         />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden px-2 py-2 lg:grid-cols-[150px_minmax(0,1fr)_240px] lg:px-3 lg:py-3">
+        <div
+          className={`grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden px-2 py-2 lg:px-3 lg:py-3 ${
+            activePanel === "ORBITA" ? "lg:grid-cols-[150px_minmax(0,1fr)]" : "lg:grid-cols-[150px_minmax(0,1fr)_240px]"
+          }`}
+        >
           <NavVertical
             panels={panels}
             activePanel={activePanel}
@@ -374,7 +393,7 @@ export function MissionControlHome() {
             </AnimatePresence>
           </section>
 
-          <LiveFeed metrics={feed} />
+          {activePanel === "ORBITA" ? null : <LiveFeed metrics={feed} />}
         </div>
 
         <StatusBar updatedAt={updatedAt} aiMode={aiMode} />
