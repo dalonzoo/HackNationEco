@@ -1,5 +1,5 @@
-import { EcoSignalApp } from "@/components/eco-signal-app";
+import { MissionControlHome } from "@/components/mission-control/MissionControlHome";
 
 export default function HomePage() {
-  return <EcoSignalApp />;
+  return <MissionControlHome />;
 }

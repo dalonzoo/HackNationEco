@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Syne } from "next/font/google";
+import { Bebas_Neue, DM_Sans, JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 
@@ -8,9 +8,15 @@ const dmSans = DM_Sans({
   variable: "--font-body"
 });
 
-const syne = Syne({
+const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
+  weight: "400",
   variable: "--font-display"
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono"
 });
 
 export const metadata: Metadata = {
@@ -21,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="it" suppressHydrationWarning>
-      <body className={`${dmSans.variable} ${syne.variable} bg-bg text-text antialiased`}>
+      <body className={`${dmSans.variable} ${bebasNeue.variable} ${jetBrainsMono.variable} bg-bg text-text antialiased`}>
         {children}
       </body>
     </html>

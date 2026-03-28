@@ -1,6 +1,8 @@
-import { generateActionPlan } from "@/lib/insights";
+import { runInsightsOrchestration } from "@/lib/ai/insights-orchestrator";
 import type { OnboardingData, OpenDataContext } from "@/lib/types";
 import { NextResponse } from "next/server";
+
+const regoloModel = process.env.REGOLO_MODEL ?? "gpt-oss-20b";
 
 const systemPrompt = `
 Sei EcoSignal, un consulente ESG AI specializzato per PMI italiane.
@@ -15,50 +17,91 @@ export async function POST(request: Request) {
     openData: OpenDataContext;
   };
 
-  const demoPayload = generateActionPlan(body.data, body.openData);
+  const llmRunner =
+    process.env.REGOLO_API_KEY && process.env.REGOLO_API_URL
+      ? async ({
+          agent,
+          instruction,
+          context
+        }: {
+          agent: string;
+          instruction: string;
+          context: Record<string, unknown>;
+        }) => {
+          const response = await fetch(`${process.env.REGOLO_API_URL}/chat/completions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.REGOLO_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: regoloModel,
+              messages: [
+                {
+                  role: "system",
+                  content: `${systemPrompt}\nAgente attivo: ${agent}.`
+                },
+                {
+                  role: "user",
+                  content: JSON.stringify(
+                    {
+                      instruction,
+                      context
+                    },
+                    null,
+                    2
+                  )
+                }
+              ],
+              temperature: 0.3
+            })
+          });
 
-  if (process.env.REGOLO_API_KEY && process.env.REGOLO_API_URL) {
-    try {
-      const response = await fetch(`${process.env.REGOLO_API_URL}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.REGOLO_API_KEY}`
-        },
-        body: JSON.stringify({
-          system: systemPrompt,
-          input: {
-            company: body.data.companyName,
-            sector: body.data.sector,
-            employees: body.data.employeesRange,
-            totalEmissions: demoPayload.carbon.total,
-            benchmark: demoPayload.carbon.benchmarkTotal,
-            topEmissionSource: demoPayload.topSource.label,
-            budgetRange: body.data.budgetRange
+          if (!response.ok) {
+            throw new Error(`Regolo agent ${agent} unavailable`);
           }
-        })
-      });
 
-      if (response.ok) {
-        const externalPayload = await response.json();
-        return NextResponse.json({
-          ...demoPayload,
-          source: "regolo",
-          externalPayload
-        });
-      }
-    } catch {
-      return NextResponse.json({
-        ...demoPayload,
-        source: "demo",
-        warning: "Fallback locale attivato: Regolo non raggiungibile."
-      });
-    }
+          const payload = (await response.json()) as {
+            output?: string;
+            text?: string;
+            content?: string;
+            choices?: Array<{
+              message?: {
+                content?: string;
+              };
+            }>;
+          };
+
+          return (
+            payload.output ??
+            payload.text ??
+            payload.content ??
+            payload.choices?.[0]?.message?.content ??
+            JSON.stringify(payload)
+          );
+        }
+      : undefined;
+
+  try {
+    const result = await runInsightsOrchestration({
+      data: body.data,
+      openData: body.openData,
+      runner: llmRunner
+    });
+
+    return NextResponse.json({
+      ...result,
+      systemPrompt
+    });
+  } catch {
+    const fallback = await runInsightsOrchestration({
+      data: body.data,
+      openData: body.openData
+    });
+
+    return NextResponse.json({
+      ...fallback,
+      systemPrompt
+    });
   }
-
-  return NextResponse.json({
-    ...demoPayload,
-    source: "demo",
-    systemPrompt
-  });
 }
