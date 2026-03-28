@@ -2,15 +2,7 @@
 
 import type { OpenDataContext } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
-
-interface FeedMetric {
-  id: string;
-  label: string;
-  value: string;
-  detail: string;
-  tone: "accent" | "blue" | "amber" | "red";
-  bar: number;
-}
+import type { FeedMetric } from "@/components/mission-control/LiveFeed";
 
 function formatClock(date: Date) {
   return date.toLocaleTimeString("it-IT", {
@@ -23,9 +15,11 @@ function formatClock(date: Date) {
 export function useLiveData(openData: OpenDataContext | null) {
   const [seed, setSeed] = useState(0);
   const [counter, setCounter] = useState(128640);
-  const [updatedAt, setUpdatedAt] = useState(formatClock(new Date()));
+  const [updatedAt, setUpdatedAt] = useState("--:--:--");
 
   useEffect(() => {
+    setUpdatedAt(formatClock(new Date()));
+
     const tick = window.setInterval(() => {
       setCounter((value) => value + 4 + Math.round(Math.random() * 5));
     }, 900);

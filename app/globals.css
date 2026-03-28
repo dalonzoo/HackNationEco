@@ -187,6 +187,69 @@ textarea {
   transition: transform 0.3s ease;
 }
 
+.mission-launch-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  min-width: min(100%, 420px);
+  padding: 1rem 1.5rem;
+  border: 1px solid rgba(0, 255, 136, 0.28);
+  background:
+    linear-gradient(135deg, rgba(0, 255, 136, 0.14), rgba(74, 158, 255, 0.08)),
+    linear-gradient(180deg, rgba(7, 14, 11, 0.96), rgba(6, 10, 9, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(0, 255, 136, 0.08),
+    0 18px 44px rgba(0, 255, 136, 0.12),
+    0 0 32px rgba(74, 158, 255, 0.1);
+  overflow: hidden;
+}
+
+.mission-launch-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.18) 48%, transparent 100%);
+  transform: translateX(-135%);
+  animation: launchSweep 3s ease-in-out infinite;
+}
+
+.mission-launch-button::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  pointer-events: none;
+}
+
+.mission-launch-label,
+.mission-launch-arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.mission-launch-arrow {
+  color: var(--accent);
+  transition: transform 0.3s ease;
+}
+
+.mission-launch-button:hover .mission-launch-arrow,
+.mission-launch-button:focus-visible .mission-launch-arrow {
+  transform: translateX(8px);
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 .custom-cta:hover .custom-cta-arrow,
 .custom-cta:focus-visible .custom-cta-arrow {
   transform: translateX(8px);
@@ -242,13 +305,30 @@ textarea {
   }
 }
 
+@keyframes launchSweep {
+  0%,
+  100% {
+    transform: translateX(-135%);
+    opacity: 0;
+  }
+  18%,
+  62% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(135%);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
   }
 
   .status-marquee,
-  .loading-progress {
+  .loading-progress,
+  .mission-launch-button::before {
     animation: none;
   }
 

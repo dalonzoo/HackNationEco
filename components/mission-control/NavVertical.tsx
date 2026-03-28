@@ -7,12 +7,14 @@ export function NavVertical({
   activePanel,
   city,
   coordinates,
+  statuses,
   onChange
 }: {
   panels: PanelKey[];
   activePanel: PanelKey;
   city: string;
   coordinates: string;
+  statuses: Record<PanelKey, "ready" | "loading" | "locked">;
   onChange: (panel: PanelKey) => void;
 }) {
   return (
@@ -20,18 +22,35 @@ export function NavVertical({
       <div className="space-y-2">
         {panels.map((panel) => {
           const isActive = panel === activePanel;
+          const status = statuses[panel];
+          const isReady = status === "ready";
 
           return (
             <button
               key={panel}
               type="button"
-              onClick={() => onChange(panel)}
-              className={`mono-font flex w-full items-center gap-3 border-l-2 pl-3 text-left text-xs uppercase tracking-[0.3em] ${
-                isActive ? "border-accent text-text" : "border-transparent text-muted"
+              onClick={() => {
+                if (!isReady) return;
+                onChange(panel);
+              }}
+              disabled={!isReady}
+              className={`mono-font flex w-full items-center justify-between gap-3 border-l-2 pl-3 text-left text-xs uppercase tracking-[0.3em] ${
+                isActive
+                  ? "border-accent text-text"
+                  : isReady
+                    ? "border-transparent text-muted"
+                    : "border-transparent text-ghost"
               }`}
             >
-              <span className={`${isActive ? "text-accent" : "text-ghost"}`}>{isActive ? "*" : "."}</span>
-              {panel}
+              <span className="flex items-center gap-3">
+                <span className={`${isActive ? "text-accent" : status === "loading" ? "animate-pulse text-[var(--blue-data)]" : "text-ghost"}`}>
+                  {isActive ? "*" : status === "ready" ? "+" : status === "loading" ? "~" : "."}
+                </span>
+                {panel}
+              </span>
+              <span className="text-[9px] tracking-[0.2em] text-muted">
+                {status === "ready" ? "OK" : status === "loading" ? "..." : "--"}
+              </span>
             </button>
           );
         })}

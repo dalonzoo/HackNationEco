@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-interface FeedMetric {
+export interface FeedMetric {
   id: string;
   label: string;
   value: string;

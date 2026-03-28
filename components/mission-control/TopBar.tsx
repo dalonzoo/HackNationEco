@@ -4,11 +4,15 @@ export function TopBar({
   company,
   aiMode,
   updatedAt,
+  primaryLabel,
+  showPrimaryAction = true,
   onPrimaryAction
 }: {
   company: string;
   aiMode: "multi-agent-llm" | "multi-agent-fallback" | "loading";
   updatedAt: string;
+  primaryLabel: string;
+  showPrimaryAction?: boolean;
   onPrimaryAction: () => void;
 }) {
   return (
@@ -45,13 +49,15 @@ export function TopBar({
         <span>{company}</span>
       </div>
 
-      <button
-        type="button"
-        onClick={onPrimaryAction}
-        className="mono-font border border-[rgba(0,255,136,0.28)] px-3 py-2 text-[10px] uppercase tracking-[0.26em] text-accent"
-      >
-        Analisi gratuita -&gt;
-      </button>
+      {showPrimaryAction ? (
+        <button
+          type="button"
+          onClick={onPrimaryAction}
+          className="mono-font border border-[rgba(0,255,136,0.28)] px-3 py-2 text-[10px] uppercase tracking-[0.26em] text-accent"
+        >
+          {primaryLabel}
+        </button>
+      ) : null}
     </header>
   );
 }

@@ -1,62 +1,76 @@
 # EcoSignal Enterprise
 
-Demo hackathon in italiano per PMI italiane che vogliono trasformare dati ambientali sparsi in una dashboard operativa, insight ESG, azioni prioritarie e reportistica CSRD.
+Demo hackathon in italiano per PMI italiane che vogliono trasformare dati ambientali sparsi in una sequenza operativa: intake dati, contesto territoriale, azioni AI e readiness CSRD.
 
-L'interfaccia principale segue il redesign "Mission Control": top bar, navigazione verticale, feed ambientale laterale, pannello scanner con drag and drop documenti e viste dedicate per azioni AI e compliance.
+L'app oggi usa un flusso "Mission Control" a 3 stadi:
+
+1. startup minimale con upload dataset
+2. deck di 4 viste che si sbloccano mentre il sistema lavora
+3. navigazione focalizzata pagina-per-pagina con pulsanti previous/next
 
 ## Stato attuale
 
-- Homepage redesign completata in stile Mission Control
-- UI tutta in italiano
-- Inserimento dati supportato via dataset demo, input manuale e drag and drop documenti
-- Dataset demo principale allineato a `Metalmeccanica Aurora S.p.A.` con blocco dedicato al travel planning aziendale
-- Tracciabilita` delle sorgenti visibile nello scanner
-- Carbon footprint, benchmark e azioni ESG generati in tempo reale
-- Pipeline AI organizzata come orchestrazione multi-agent
-- `ORBITA` mostra azioni d'impatto e consente di generare il briefing giornaliero audio
-- Report CSRD PDF generabile dal pannello compliance
+- UI interamente in italiano
+- startup minimale con upload file, dataset demo e opzione manuale comprimibile
+- orchestrazione visiva di 4 viste: `SCANNER`, `TERRA`, `ORBITA`, `COMPLIANCE`
+- ogni vista diventa cliccabile appena i dati necessari sono pronti
+- `SCANNER` mostra tracciabilita' sorgenti e output carbon live
+- `TERRA` mostra note territoriali, feed open data live/demo e benchmark
+- `ORBITA` mostra solo azioni AI e dettaglio operativo
+- `COMPLIANCE` ospita timer CSRD, stato readiness, briefing audio AI e download report
+- pipeline AI multi-agent attiva con supporto `multi-agent-llm` e `multi-agent-fallback`
 
 ## Cosa funziona oggi
 
-### 1. Experience Mission Control
+### 1. Flusso Mission Control
 
-- Shell full-screen con pannelli `TERRA`, `SCANNER`, `ORBITA`, `COMPLIANCE`
-- Feed ambientale laterale con refresh periodico
-- Layout corretto per evitare lo scroll della pagina desktop
-- Cursore custom rimosso, si usa il cursore nativo del browser
+L'esperienza principale non e' piu' una shell a pannelli statici sempre visibili. Oggi il prodotto segue questo percorso:
+
+- startup page centrata per caricare un dataset aziendale
+- click su `AVVIA FLUSSO MULTI-AGENTE`
+- comparsa del deck con 4 card di stato
+- apertura della singola pagina quando la card e' pronta
+- navigazione tra le pagine con pulsanti `Previous` e `Next`
+
+Le viste disponibili sono:
+
+- `SCANNER`: sorgenti aziendali, tracciabilita', output carbon
+- `TERRA`: contesto open data e segnali territoriali
+- `ORBITA`: azioni AI con payoff e direct actions
+- `COMPLIANCE`: readiness CSRD, briefing audio, report finale
 
 File principali:
 
 - [MissionControlHome.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/MissionControlHome.tsx)
 - [TopBar.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/TopBar.tsx)
-- [StatusBar.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/StatusBar.tsx)
-- [LiveFeed.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/LiveFeed.tsx)
+- [MissionPrepDeck.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/MissionPrepDeck.tsx)
+- [PanelPager.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/PanelPager.tsx)
 - [globals.css](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/globals.css)
 
-### 2. Inserimento e provenienza dati
+### 2. Inserimento dati e tracciabilita'
 
-Lo `SCANNER` supporta:
+La startup e' ottimizzata per far partire rapidamente la missione:
 
-- dataset demo precaricato
-- input manuale di settore, dipendenti, elettricita`
-- upload drag and drop di `CSV`, `JSON`, `TXT`
-- upload di `PDF` e `XLSX` come evidenza, senza parsing profondo
+- upload di `CSV`, `JSON`, `TXT`, `PDF`, `XLSX`
+- visibilita' del file collegato dopo l'upload
+- pulsante per sostituire il file
+- dataset demo ricaricabile
+- campi manuali comprimibili, non aperti di default
 
-Il dataset demo di default contiene anche segnali operativi per le trasferte:
+Una volta entrati nella vista `SCANNER`, la colonna sinistra mostra la provenienza dati invece dei controlli di input estesi. La tracciabilita' espone:
 
-- numero trasferte annuali
-- quota voli brevi convertibili su treno
-- giorni medi di anticipo prenotazione
-- copertura workflow approvativo
-- quota meeting virtuali
-- notti hotel annuali e corridoi rail prioritari
-
-Ogni sorgente mostrata in UI espone:
-
+- etichetta sorgente
+- orario aggiornamento
 - origine del dato
-- orario ultimo aggiornamento
-- campi aggiornati
-- nota di ingestione
+- nota sintetica di ingestione
+
+Il parsing automatico utile al modello resta focalizzato su:
+
+- `CSV`
+- `JSON`
+- `TXT`
+
+I file `PDF` e `XLSX` possono essere caricati come sorgente/evidenza, ma non vengono ancora estratti in profondita'.
 
 File principali:
 
@@ -64,33 +78,53 @@ File principali:
 - [document-ingestion.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/lib/document-ingestion.ts)
 - [mock-company-full.json](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/data/mock-company-full.json)
 
-### 3. Motore AI multi-agent
+### 3. Open data territoriali
 
-L'endpoint AI non e` piu` un singolo blocco monolitico. Ora usa una pipeline organizzata con 4 agenti:
+Gli open data non vivono piu' in una colonna laterale persistente. Oggi sono integrati dentro `TERRA`, sotto `NOTE DAL TERRITORIO`, tramite feed live/demo aggiornato periodicamente.
+
+Il feed mostra ad esempio:
+
+- PM2.5 territoriale
+- trend temperatura
+- CO2 atmosferica
+- rischio territoriale
+- quota energia rinnovabile
+
+La vista `TERRA` unisce:
+
+- note territoriali
+- feed ambientale live/demo
+- incentivi
+- benchmark vs baseline aziendale
+
+File principali:
+
+- [PanelTerra.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/panels/PanelTerra.tsx)
+- [LiveFeed.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/LiveFeed.tsx)
+- [useLiveData.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/hooks/useLiveData.ts)
+- [app/api/open-data/context/route.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/open-data/context/route.ts)
+
+### 4. Motore AI multi-agent
+
+L'endpoint AI usa una pipeline organizzata in 4 agenti:
 
 - `planner`
 - `benchmark`
 - `compliance`
 - `action`
 
-Flusso:
+Flusso logico:
 
-1. si parte dal carbon model locale e dal contesto open data
-2. si costruisce un context condiviso dell'azienda
-3. il planner gira per primo
-4. benchmark, compliance e action girano in parallelo
-5. la route restituisce `orchestrationMode`, `source`, `agentTrace` e warning eventuali
+1. si parte dal carbon model locale e dai dati aziendali
+2. si carica il contesto open data territoriale
+3. gira il `planner`
+4. `benchmark`, `compliance` e `action` girano in parallelo
+5. la route restituisce `source`, `orchestrationMode`, `agentTrace` e warning eventuali
 
-Modalita` supportate:
+Modalita' supportate:
 
-- `multi-agent-llm` se Regolo risponde correttamente
-- `multi-agent-fallback` se mancano chiavi o la chiamata LLM fallisce
-
-Con il dataset demo attuale, `ORBITA` puo` far emergere anche una proposta specifica di travel planning:
-
-- `travel-planning`
-- titolo: `Riprogetta le trasferte con travel policy rail-first e booking anticipato`
-- caso d'uso: riduzione voli brevi, booking anticipato, piu` riunioni virtuali e controllo delle notti hotel
+- `multi-agent-llm` quando Regolo risponde correttamente
+- `multi-agent-fallback` quando l'LLM non e' disponibile
 
 File principali:
 
@@ -98,38 +132,46 @@ File principali:
 - [insights-orchestrator.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/lib/ai/insights-orchestrator.ts)
 - [insights-agents.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/lib/ai/insights-agents.ts)
 
-### 4. Open data, audio e report
+### 5. Azioni AI, briefing e report
 
-- `GET /api/open-data/context`: recupera contesto territoriale, con fallback demo
-- `POST /api/ai/insights`: produce score, carbon, azioni e trace agenti
-- `POST /api/audio/briefing`: briefing audio demo o ElevenLabs
-- `POST /api/reports/csrd`: genera PDF CSRD
+`ORBITA` oggi e' dedicata solo alle azioni:
 
-Briefing audio:
+- sfera centrale con ESG score
+- azioni selezionabili in orbita
+- dettaglio payoff, impatto, difficulty, incentivi e direct actions
 
-- il trigger UI si trova nel pannello `ORBITA`
-- se ElevenLabs e` disponibile, viene restituito audio reale in `data:audio/mpeg;base64,...`
-- se `ELEVENLABS_VOICE_ID` non e` valido, la route prova a usare una voce disponibile dell'account
-- se ElevenLabs non e` raggiungibile, resta disponibile il transcript demo
+Il briefing audio non e' piu' in `ORBITA`. Ora si trova in `COMPLIANCE`, in alto a destra, insieme a:
 
-Directory API:
+- trigger briefing giornaliero
+- player audio se disponibile
+- transcript operativo
+- warning fallback eventuali
 
-- [app/api/open-data](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/open-data)
-- [app/api/ai](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/ai)
-- [app/api/audio](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/audio)
-- [app/api/reports](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/reports)
+Sempre in `COMPLIANCE` sono presenti:
+
+- countdown readiness
+- stato missione
+- trace sintetica compliance
+- CTA per generare il report PDF CSRD
+
+File principali:
+
+- [PanelOrbita.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/panels/PanelOrbita.tsx)
+- [PanelCompliance.tsx](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/components/mission-control/panels/PanelCompliance.tsx)
+- [app/api/audio/briefing/route.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/audio/briefing/route.ts)
+- [app/api/reports/csrd/route.ts](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/app/api/reports/csrd/route.ts)
 
 ## Demo vs live
 
-Al momento il prodotto e` volutamente demo-first.
+Il prodotto resta demo-first, ma con hook live reali dove disponibili.
 
-- I dati aziendali partono da mock o da input utente
-- Gli open data provano a essere live, ma hanno fallback demo
-- L'AI e` predisposta per Regolo, ma ripiega su fallback multi-agent strutturato se l'LLM non e` raggiungibile
-- L'audio usa ElevenLabs quando disponibile, con fallback demo se il provider non risponde
-- La persistenza Supabase non e` attualmente esposta in UI
+- i dati aziendali partono da upload utente o mock
+- il contesto territoriale prova a usare open data live, con fallback demo
+- l'AI usa Regolo quando raggiungibile, altrimenti fallback locale multi-agent
+- l'audio usa ElevenLabs quando disponibile, altrimenti transcript/demo
+- Supabase non e' ancora esposto nel flusso UI finale
 
-Questo significa che l'app resta sempre presentabile in hackathon anche senza servizi esterni disponibili.
+Questo rende l'app presentabile anche in ambienti di demo o sandbox con connettivita' parziale.
 
 ## Setup locale
 
@@ -152,43 +194,39 @@ Variabili rilevanti:
 
 ## Test eseguiti
 
-Verifiche fatte sull'attuale stato del progetto:
+Verifiche eseguite sull'ambiente attuale:
 
 - `npm run build`: passato
-- `next start` locale: avvio verificato
-- test route `POST /api/ai/insights`: passato
-- smoke test completo `open-data -> insights -> audio -> report`: passato
-- smoke test con dataset demo aggiornato su travel planning: passato
+- smoke test `POST /api/ai/insights`: passato
+- verifica LLM reale: passata
 
-Risultato del test route nell'ambiente attuale:
+Risultato piu' recente del test route AI:
 
 - `agentCount: 4`
 - `firstAgent: planner`
 - `orchestrationMode: multi-agent-llm`
 - `agentModes: llm,llm,llm,llm`
-- `ORBITA` include la proposta `travel-planning` tra le prime 3 azioni del mock aggiornato
-- stima travel planning del mock attuale: `9.95 tCO2eq` e `20.970 EUR/anno`
+- `source: regolo-multi-agent`
+- `warning: null`
 
 Nota:
 
-- Regolo e` raggiungibile e risponde correttamente via `chat/completions`
+- Regolo e' raggiungibile e risponde correttamente via `chat/completions`
 - la route AI usa payload OpenAI-compatible con `model` configurabile
-- `GET /api/open-data/context` ha restituito `source: live` durante lo smoke test
-- `POST /api/audio/briefing` puo` generare audio reale via ElevenLabs
-- il mock demo effettivo e` letto da [mock-company-full.json](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/data/mock-company-full.json)
+- il briefing audio puo' usare ElevenLabs quando disponibile
+- il mock demo effettivo e' letto da [mock-company-full.json](/c:/Users/danie/Desktop/AiTest/eco_signal/HackNationEco/data/mock-company-full.json)
 
 ## Limiti attuali
 
-- parsing automatico documenti limitato a `CSV`, `JSON`, `TXT`
-- `PDF` e `XLSX` sono caricati come evidenza ma non estratti in profondita`
-- Supabase non e` ancora collegato in modo operativo end-to-end al prodotto finale
-- manca ancora una vista dedicata in UI per mostrare il dettaglio dell'`agentTrace`
+- parsing automatico documenti ancora limitato a `CSV`, `JSON`, `TXT`
+- `PDF` e `XLSX` non hanno ancora estrazione semantica completa
+- `agentTrace` e' disponibile a livello dati ma non ancora mostrato come vista diagnostica dedicata
+- Supabase non e' ancora collegato end-to-end al flusso prodotto
 
 ## Prossimi step consigliati
 
 - aggiungere parsing reale di bollette e PDF
-- visualizzare in UI il trace dei 4 agenti
+- esporre una vista diagnostica dell'`agentTrace`
 - collegare persistenza aziende, upload e report su Supabase
-- aggiungere widget diagnostico dedicato al travel planning con KPI e leve di riduzione
-- distinguere in modo ancora piu` esplicito i badge `LIVE`, `DEMO`, `DERIVATO`
-- mantenere Regolo ed ElevenLabs pienamente operativi anche su ambienti non sandbox
+- aggiungere badge piu' espliciti `LIVE`, `DEMO`, `DERIVATO`
+- raffinare i micro-copy della tracciabilita' e della readiness per uso executive/demo

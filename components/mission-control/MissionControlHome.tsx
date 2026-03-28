@@ -1,19 +1,23 @@
 "use client";
 
-import { LiveFeed } from "@/components/mission-control/LiveFeed";
 import { LoadingScreen } from "@/components/mission-control/LoadingScreen";
-import { NavVertical } from "@/components/mission-control/NavVertical";
+import {
+  MissionPrepDeck,
+  type MissionAgentIndicator,
+  type MissionPrepCard
+} from "@/components/mission-control/MissionPrepDeck";
+import { PanelPager } from "@/components/mission-control/PanelPager";
 import { ParticleField } from "@/components/mission-control/ParticleField";
-import { StatusBar } from "@/components/mission-control/StatusBar";
 import { TopBar } from "@/components/mission-control/TopBar";
 import { PanelCompliance } from "@/components/mission-control/panels/PanelCompliance";
 import { PanelOrbita } from "@/components/mission-control/panels/PanelOrbita";
 import { PanelScanner } from "@/components/mission-control/panels/PanelScanner";
 import { PanelTerra } from "@/components/mission-control/panels/PanelTerra";
-import { getEmployeeMedian } from "@/lib/carbon";
-import { calculateCarbonFootprint } from "@/lib/carbon";
+import { PanelKey, usePanelNav } from "@/hooks/usePanelNav";
+import { useLiveData } from "@/hooks/useLiveData";
+import { calculateCarbonFootprint, getEmployeeMedian } from "@/lib/carbon";
 import { parseDataDocument } from "@/lib/document-ingestion";
-import { cityProfiles, defaultOnboardingData } from "@/lib/mock-data";
+import { defaultOnboardingData } from "@/lib/mock-data";
 import type {
   ActionRecommendation,
   BriefingResponse,
@@ -25,8 +29,6 @@ import type {
 } from "@/lib/types";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { PanelKey, usePanelNav } from "@/hooks/usePanelNav";
-import { useLiveData } from "@/hooks/useLiveData";
 
 interface InsightsResponse {
   carbon: CarbonFootprint;
@@ -41,6 +43,24 @@ interface InsightsResponse {
 
 interface AudioBriefingState extends BriefingResponse {}
 
+type CardStatus = "ready" | "loading" | "locked";
+type ViewStage = "intake" | "deck" | "panel";
+
+const panelTitles: Record<PanelKey, string> = {
+  SCANNER: "Scanner",
+  TERRA: "Terra",
+  ORBITA: "Orbita",
+  COMPLIANCE: "Compliance"
+};
+
+function formatNowLabel() {
+  return new Date().toLocaleTimeString("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
 function employeeCountToRange(value: number): OnboardingData["employeesRange"] {
   if (value < 50) return "10-49";
   if (value < 100) return "50-99";
@@ -51,7 +71,8 @@ function employeeCountToRange(value: number): OnboardingData["employeesRange"] {
 
 export function MissionControlHome() {
   const reduceMotion = useReducedMotion();
-  const { activePanel, panels, setActivePanel } = usePanelNav("TERRA");
+  const [analysisStarted, setAnalysisStarted] = useState(false);
+  const [viewStage, setViewStage] = useState<ViewStage>("intake");
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
   const [openData, setOpenData] = useState<OpenDataContext | null>(null);
   const [insights, setInsights] = useState<InsightsResponse | null>(null);
@@ -59,14 +80,14 @@ export function MissionControlHome() {
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
   const [countdown, setCountdown] = useState({ days: 487, hours: 14, minutes: 32, seconds: 18 });
-  const [ingestionNotice, setIngestionNotice] = useState("Dataset demo attivo. Puoi passare a input manuale o caricare un file.");
+  const [ingestionNotice, setIngestionNotice] = useState("Tracciabilita' attiva sulle sorgenti dati.");
   const [dataSources, setDataSources] = useState<DataSourceEntry[]>([
     {
       id: "demo-seed",
       label: "DATASET DEMO",
       kind: "demo",
       origin: "Seed iniziale mission control",
-      updatedAt: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      updatedAt: "--:--:--",
       fields: ["companyName", "sector", "electricityKwh", "flightsKm", "trainKm"],
       note: `${defaultOnboardingData.companyName} - baseline demo con travel planning pronta all'uso.`
     }
@@ -77,7 +98,38 @@ export function MissionControlHome() {
   const score = insights?.score ?? { environmental: 68, social: 76, governance: 71, total: 72, benchmark: 64, deltaVsBenchmark: 8 };
   const actions = insights?.actions ?? [];
   const { feed, counter, updatedAt } = useLiveData(openData);
-  const aiMode = insights?.orchestrationMode ?? "loading";
+  const aiMode = analysisStarted ? insights?.orchestrationMode ?? "loading" : "loading";
+
+  const panelStatuses = useMemo<Record<PanelKey, CardStatus>>(() => {
+    if (!analysisStarted) {
+      return {
+        SCANNER: "ready",
+        TERRA: "locked",
+        ORBITA: "locked",
+        COMPLIANCE: "locked"
+      };
+    }
+
+    return {
+      SCANNER: "ready",
+      TERRA: openData ? "ready" : "loading",
+      ORBITA: insights ? "ready" : openData ? "loading" : "locked",
+      COMPLIANCE: insights ? "ready" : openData ? "loading" : "locked"
+    };
+  }, [analysisStarted, insights, openData]);
+
+  const availablePanels = useMemo<PanelKey[]>(() => {
+    return (["SCANNER", "TERRA", "ORBITA", "COMPLIANCE"] as PanelKey[]).filter((panel) => panelStatuses[panel] === "ready");
+  }, [panelStatuses]);
+
+  const {
+    activePanel,
+    setActivePanel,
+    canGoPrevious,
+    canGoNext,
+    goToPrevious,
+    goToNext
+  } = usePanelNav("SCANNER", availablePanels);
 
   useEffect(() => {
     const seen = window.sessionStorage.getItem("ecosignal-loading-seen");
@@ -91,13 +143,14 @@ export function MissionControlHome() {
   }, []);
 
   useEffect(() => {
+    if (!analysisStarted) return;
+
     setOpenData(null);
     let cancelled = false;
 
     async function loadOpenData() {
       const response = await fetch(`/api/open-data/context?city=${encodeURIComponent(data.city)}&sector=${encodeURIComponent(data.sector)}`);
-      if (!response.ok) return;
-      if (cancelled) return;
+      if (!response.ok || cancelled) return;
       setOpenData((await response.json()) as OpenDataContext);
     }
 
@@ -106,14 +159,15 @@ export function MissionControlHome() {
     return () => {
       cancelled = true;
     };
-  }, [data.city, data.sector]);
+  }, [analysisStarted, data.city, data.sector]);
 
   useEffect(() => {
+    if (!analysisStarted) return;
     setInsights(null);
-  }, [data]);
+  }, [analysisStarted, data]);
 
   useEffect(() => {
-    if (!openData) return;
+    if (!analysisStarted || !openData) return;
 
     const timeout = window.setTimeout(async () => {
       const response = await fetch("/api/ai/insights", {
@@ -128,7 +182,7 @@ export function MissionControlHome() {
     }, 400);
 
     return () => window.clearTimeout(timeout);
-  }, [data, openData]);
+  }, [analysisStarted, data, openData]);
 
   useEffect(() => {
     setAudioBriefing(null);
@@ -163,8 +217,6 @@ export function MissionControlHome() {
     { label: "Scope 3", value: carbon.scope3, width: Math.min(100, (carbon.scope3 / carbon.total) * 100 + 8) }
   ];
 
-  const profile = cityProfiles[data.city] ?? cityProfiles.Milano;
-  const coordinates = `${profile.lat.toFixed(2)}N  ${profile.lon.toFixed(2)}E`;
   const provenanceEntries = useMemo<DataSourceEntry[]>(() => {
     const derived = [...dataSources];
 
@@ -199,6 +251,75 @@ export function MissionControlHome() {
     return derived;
   }, [dataSources, insights, openData, updatedAt]);
 
+  const missionCards = useMemo<MissionPrepCard[]>(() => {
+    return [
+      {
+        panel: "SCANNER",
+        title: "Scanner",
+        description: "Dati aziendali, upload documenti e provenienza delle sorgenti.",
+        detail: analysisStarted ? ingestionNotice : "Intake pronto al lancio",
+        status: panelStatuses.SCANNER
+      },
+      {
+        panel: "TERRA",
+        title: "Terra",
+        description: "Contesto territoriale, rischio climatico e benchmark locale.",
+        detail: openData ? `${openData.city} - aria ${openData.airQualityLabel}` : "Connessione ai feed territoriali",
+        status: panelStatuses.TERRA
+      },
+      {
+        panel: "ORBITA",
+        title: "Orbita",
+        description: "Azioni AI, payoff economico e briefing operativo.",
+        detail: insights ? `${actions.length} azioni pronte - ESG ${score.total}` : "Planner, benchmark e action in esecuzione",
+        status: panelStatuses.ORBITA
+      },
+      {
+        panel: "COMPLIANCE",
+        title: "Compliance",
+        description: "Readiness CSRD, trace compliance e report PDF.",
+        detail: insights ? "Dossier CSRD pronto alla navigazione" : "Composizione readiness e report",
+        status: panelStatuses.COMPLIANCE
+      }
+    ];
+  }, [actions.length, analysisStarted, ingestionNotice, insights, openData, panelStatuses, score.total]);
+
+  const missionAgents = useMemo<MissionAgentIndicator[]>(() => {
+    if (insights?.agentTrace.length) {
+      return insights.agentTrace.map((agent) => ({
+        id: agent.agent,
+        label: agent.agent,
+        detail: agent.mode,
+        status: "done"
+      }));
+    }
+
+    if (!analysisStarted) {
+      return [
+        { id: "planner", label: "planner", detail: "standby", status: "queued" },
+        { id: "benchmark", label: "benchmark", detail: "standby", status: "queued" },
+        { id: "compliance", label: "compliance", detail: "standby", status: "queued" },
+        { id: "action", label: "action", detail: "standby", status: "queued" }
+      ];
+    }
+
+    if (!openData) {
+      return [
+        { id: "planner", label: "planner", detail: "warming up", status: "running" },
+        { id: "benchmark", label: "benchmark", detail: "queued", status: "queued" },
+        { id: "compliance", label: "compliance", detail: "queued", status: "queued" },
+        { id: "action", label: "action", detail: "queued", status: "queued" }
+      ];
+    }
+
+    return [
+      { id: "planner", label: "planner", detail: "completed", status: "done" },
+      { id: "benchmark", label: "benchmark", detail: "running", status: "running" },
+      { id: "compliance", label: "compliance", detail: "running", status: "running" },
+      { id: "action", label: "action", detail: "running", status: "running" }
+    ];
+  }, [analysisStarted, insights, openData]);
+
   function upsertDataSource(source: DataSourceEntry) {
     setDataSources((current) => {
       const next = current.filter((entry) => entry.id !== source.id);
@@ -212,10 +333,16 @@ export function MissionControlHome() {
       label: "INSERIMENTO MANUALE",
       kind: "manual",
       origin: "Scanner live del pannello centrale",
-      updatedAt: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      updatedAt: formatNowLabel(),
       fields: ["sector", "employeesRange", "electricityKwh"],
       note: `Ultimo campo modificato: ${fieldLabel}`
     });
+  }
+
+  function handleStartMission() {
+    setAnalysisStarted(true);
+    setViewStage("deck");
+    setActivePanel("SCANNER");
   }
 
   async function handleReportDownload() {
@@ -260,13 +387,11 @@ export function MissionControlHome() {
   }
 
   function renderPanel(panel: PanelKey) {
-    if (panel === "TERRA") {
-      return <PanelTerra nationalCounter={counter} onPrimaryAction={() => setActivePanel("SCANNER")} />;
-    }
-
     if (panel === "SCANNER") {
       return (
         <PanelScanner
+          mode={analysisStarted ? "workspace" : "intake"}
+          isFlowLaunching={analysisStarted && !insights}
           sector={data.sector}
           employeeValue={employeeValue}
           electricityKwh={data.electricityKwh}
@@ -288,19 +413,21 @@ export function MissionControlHome() {
             setData((current) => ({ ...current, electricityKwh: Number.isFinite(value) ? value : 0 }));
             registerManualUpdate("elettricita'");
           }}
+          
           onLoadDemo={() => {
             setData(defaultOnboardingData);
-            setIngestionNotice("Dataset demo ricaricato.");
+            setIngestionNotice("Baseline aggiornata.");
             upsertDataSource({
               id: "demo-seed",
               label: "DATASET DEMO",
               kind: "demo",
               origin: "Seed iniziale mission control",
-              updatedAt: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+              updatedAt: formatNowLabel(),
               fields: ["companyName", "sector", "electricityKwh", "flightsKm", "trainKm"],
               note: `Baseline demo riallineata su ${defaultOnboardingData.companyName}.`
             });
           }}
+          
           onFilesAdded={async (files) => {
             for (const file of files) {
               try {
@@ -317,7 +444,22 @@ export function MissionControlHome() {
               }
             }
           }}
-          onGoOrbita={() => setActivePanel("ORBITA")}
+          onStartFlow={handleStartMission}
+        />
+      );
+    }
+
+    if (panel === "TERRA" && openData) {
+      return (
+        <PanelTerra
+          openData={openData}
+          carbonTotal={carbon.total}
+          benchmarkTotal={carbon.benchmarkTotal}
+          score={score.total}
+          actionsCount={actions.length}
+          orchestrationMode={insights?.orchestrationMode ?? "multi-agent-fallback"}
+          nationalCounter={counter}
+          liveFeedMetrics={feed}
         />
       );
     }
@@ -327,16 +469,42 @@ export function MissionControlHome() {
         <PanelOrbita
           score={score.total}
           actions={actions}
-          briefing={audioBriefing}
-          isBriefingLoading={isAudioLoading}
-          canGenerateBriefing={Boolean(openData && insights)}
-          onGenerateBriefing={() => void handleGenerateAudioBriefing()}
         />
       );
     }
 
-    return <PanelCompliance countdown={countdown} onPrimaryAction={() => void handleReportDownload()} />;
+    if (panel === "COMPLIANCE") {
+      const complianceTrace =
+        insights?.agentTrace.find((agent) => agent.agent === "compliance")?.content ??
+        "Il motore compliance sta componendo i passaggi prioritari per portarti al report finale.";
+
+      return (
+        <PanelCompliance
+          countdown={countdown}
+          score={score.total}
+          actionsCount={actions.length}
+          complianceTrace={complianceTrace}
+          orchestrationMode={insights?.orchestrationMode ?? "multi-agent-fallback"}
+          briefing={audioBriefing}
+          isBriefingLoading={isAudioLoading}
+          canGenerateBriefing={Boolean(openData && insights)}
+          onGenerateBriefing={() => void handleGenerateAudioBriefing()}
+          onPrimaryAction={() => void handleReportDownload()}
+        />
+      );
+    }
+
+    return (
+      <div className="flex h-full items-center justify-center p-6 text-sm leading-7 text-muted">
+        La vista si sblocca appena il suo dataset e&apos; pronto.
+      </div>
+    );
   }
+
+  const currentPanelIndex = Math.max(1, availablePanels.indexOf(activePanel) + 1);
+  const isIntakeStage = viewStage === "intake";
+  const isDeckStage = viewStage === "deck";
+  const isPanelStage = viewStage === "panel";
 
   return (
     <main className="mission-shell">
@@ -348,55 +516,99 @@ export function MissionControlHome() {
           company={data.companyName}
           aiMode={aiMode}
           updatedAt={updatedAt}
-          onPrimaryAction={() => setActivePanel("SCANNER")}
+          primaryLabel={isDeckStage ? "Vista scanner ->" : isPanelStage ? "Torna alle viste ->" : ""}
+          showPrimaryAction={!isIntakeStage}
+          onPrimaryAction={() => {
+            if (isDeckStage) {
+              setActivePanel("SCANNER");
+              setViewStage("panel");
+              return;
+            }
+
+            setViewStage("deck");
+          }}
         />
 
-        <div
-          className={`grid min-h-0 flex-1 grid-cols-1 gap-px overflow-hidden px-2 py-2 lg:px-3 lg:py-3 ${
-            activePanel === "ORBITA" ? "lg:grid-cols-[150px_minmax(0,1fr)]" : "lg:grid-cols-[150px_minmax(0,1fr)_240px]"
-          }`}
-        >
-          <NavVertical
-            panels={panels}
-            activePanel={activePanel}
-            city={data.city}
-            coordinates={coordinates}
-            onChange={setActivePanel}
-          />
-
-          <section aria-live="polite" className="mission-panel relative min-h-0 overflow-hidden">
-            <AnimatePresence mode="wait">
+        {isIntakeStage ? (
+          <div className="flex min-h-0 flex-1 overflow-hidden px-2 py-2 lg:px-4 lg:py-4">
+            <section aria-live="polite" className="mission-panel relative mx-auto min-h-0 w-full max-w-[1240px] overflow-hidden">
               <motion.div
-                key={activePanel}
                 initial={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(6px)", scale: 0.985 }}
                 animate={reduceMotion ? { opacity: 1 } : { opacity: 1, filter: "blur(0px)", scale: 1 }}
-                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(4px)", scale: 0.98 }}
-                transition={{ duration: reduceMotion ? 0.16 : 0.24, ease: "easeOut" }}
-                className="relative h-full min-h-0"
+                transition={{ duration: reduceMotion ? 0.16 : 0.28, ease: "easeOut" }}
+                className="scrollbar-hidden relative h-full min-h-0 overflow-y-auto"
               >
-                {!reduceMotion ? (
-                  <div className="strip-grid">
-                    {Array.from({ length: 20 }, (_, index) => (
-                      <motion.div
-                        key={`${activePanel}-strip-${index}`}
-                        className="strip-row h-[5%]"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.025, duration: 0.16 }}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-
-                {renderPanel(activePanel)}
+                {renderPanel("SCANNER")}
               </motion.div>
-            </AnimatePresence>
-          </section>
+            </section>
+          </div>
+        ) : isDeckStage ? (
+          <div className="flex min-h-0 flex-1 overflow-hidden px-2 py-2 lg:px-4 lg:py-4">
+            <section aria-live="polite" className="mission-panel relative mx-auto flex min-h-0 w-full max-w-[1400px] overflow-hidden">
+              <motion.div
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(8px)", scale: 0.99 }}
+                animate={reduceMotion ? { opacity: 1 } : { opacity: 1, filter: "blur(0px)", scale: 1 }}
+                transition={{ duration: reduceMotion ? 0.16 : 0.28, ease: "easeOut" }}
+                className="flex h-full min-h-0 flex-1 items-center"
+              >
+                <MissionPrepDeck
+                  cards={missionCards}
+                  agents={missionAgents}
+                  activePanel={activePanel}
+                  variant="deck-only"
+                  onSelect={(panel) => {
+                    if (panelStatuses[panel] !== "ready") return;
+                    setActivePanel(panel);
+                    setViewStage("panel");
+                  }}
+                />
+              </motion.div>
+            </section>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 overflow-hidden px-2 py-2 lg:px-4 lg:py-4">
+            <section aria-live="polite" className="mission-panel relative mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col overflow-hidden">
+              <div className="relative min-h-0 flex-1 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activePanel}
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(6px)", scale: 0.985, y: 22 }}
+                    animate={reduceMotion ? { opacity: 1 } : { opacity: 1, filter: "blur(0px)", scale: 1, y: 0 }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(4px)", scale: 0.98, y: -10 }}
+                    transition={{ duration: reduceMotion ? 0.16 : 0.26, ease: "easeOut" }}
+                    className="scrollbar-hidden relative h-full min-h-0 overflow-y-auto"
+                  >
+                    {!reduceMotion ? (
+                      <div className="strip-grid">
+                        {Array.from({ length: 20 }, (_, index) => (
+                          <motion.div
+                            key={`${activePanel}-strip-${index}`}
+                            className="strip-row h-[5%]"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.02, duration: 0.16 }}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
 
-          {activePanel === "ORBITA" ? null : <LiveFeed metrics={feed} />}
-        </div>
+                    {renderPanel(activePanel)}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
 
-        <StatusBar updatedAt={updatedAt} aiMode={aiMode} />
+              <PanelPager
+                currentLabel={panelTitles[activePanel]}
+                currentIndex={currentPanelIndex}
+                total={availablePanels.length}
+                onPrevious={goToPrevious}
+                onNext={goToNext}
+                canGoPrevious={canGoPrevious}
+                canGoNext={canGoNext}
+              />
+            </section>
+          </div>
+        )}
       </div>
     </main>
   );
