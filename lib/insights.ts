@@ -21,7 +21,7 @@ export function buildBriefing(
       : "nessuna azione prioritaria ancora disponibile";
 
   const transcript = [
-    `Briefing EcoSignal per ${companyName}.`,
+    `Briefing EcoSynchro per ${companyName}.`,
     `Contesto territoriale ${openData.city}: aria ${openData.airQualityLabel}, rischio ${openData.climateRiskLabel}.`,
     highlights || "L'analisi iniziale e' completa e pronta per la fase operativa.",
     `Azioni prioritarie: ${actionLine}.`,

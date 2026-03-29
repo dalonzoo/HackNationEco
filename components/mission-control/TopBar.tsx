@@ -24,7 +24,7 @@ export function TopBar({
       <div className="flex min-w-0 items-center gap-2 lg:gap-3">
         <div className="display-font flex items-center gap-2 text-2xl uppercase tracking-[0.18em] text-text">
           <span className="signal-dot" />
-          EcoSignal
+          EcoSynchro
         </div>
         <span className="mono-font hidden border border-[rgba(0,255,136,0.2)] px-2 py-1 text-[10px] uppercase tracking-[0.22em] text-muted sm:inline-flex">
           Enterprise

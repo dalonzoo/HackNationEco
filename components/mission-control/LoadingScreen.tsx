@@ -25,7 +25,7 @@ export function LoadingScreen({ visible }: { visible: boolean }) {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.12),transparent_34%),radial-gradient(circle_at_50%_62%,rgba(74,158,255,0.08),transparent_26%)]" />
 
           <div className="display-font text-[clamp(3rem,10vw,7rem)] uppercase tracking-[0.18em] text-accent">
-            ECOSIGNAL
+            ECOSYNCHRO
           </div>
           <div className="mono-font mt-4 text-xs uppercase tracking-[0.42em] text-muted">
             INIZIALIZZAZIONE SISTEMA...

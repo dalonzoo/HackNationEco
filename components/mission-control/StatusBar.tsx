@@ -10,7 +10,7 @@ export function StatusBar({
   return (
     <div className="mission-section relative z-10 h-8 overflow-hidden px-4">
       <div className="status-marquee mono-font flex h-full items-center gap-8 text-[10px] uppercase tracking-[0.26em] text-ghost">
-        <span>* ECOSIGNAL AI ONLINE</span>
+        <span>* ECOSYNCHRO AI ONLINE</span>
         <span>
           ORCHESTRAZIONE:{" "}
           {aiMode === "multi-agent-llm"
@@ -23,7 +23,7 @@ export function StatusBar({
         <span>DATI: ISPRA - GSE - OPENMETEO</span>
         <span>GDPR COMPLIANT</span>
         <span>COPYRIGHT 2026</span>
-        <span>* ECOSIGNAL AI ONLINE</span>
+        <span>* ECOSYNCHRO AI ONLINE</span>
         <span>
           ORCHESTRAZIONE:{" "}
           {aiMode === "multi-agent-llm"

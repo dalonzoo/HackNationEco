@@ -20,7 +20,7 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EcoSignal Enterprise",
+  title: "EcoSynchro Enterprise",
   description: "Piattaforma ESG Intelligence per PMI italiane."
 };
 

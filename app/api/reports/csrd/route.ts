@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   doc.setTextColor(237, 245, 240);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
-  doc.text("EcoSignal Enterprise", margin, cursorY);
+  doc.text("EcoSynchro Enterprise", margin, cursorY);
   cursorY += 28;
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   return new Response(Buffer.from(pdfArrayBuffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="ecosignal-csrd-${body.data.companyName.toLowerCase().replaceAll(" ", "-")}.pdf"`
+      "Content-Disposition": `attachment; filename="ecosynchro-csrd-${body.data.companyName.toLowerCase().replaceAll(" ", "-")}.pdf"`
     }
   });
 }
