@@ -192,6 +192,27 @@ Variabili rilevanti:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+## Deploy su Railway (Docker)
+
+Il repository ora include una configurazione Docker pronta per Railway:
+
+- `Dockerfile` multi-stage con runtime Next.js standalone
+- `.dockerignore` per ridurre il build context
+- `railway.json` con build `DOCKERFILE` e healthcheck `/`
+
+Passi consigliati:
+
+1. Push del repository su GitHub
+2. In Railway: `New Project` -> `Deploy from GitHub repo`
+3. Railway rileva `railway.json` e usa il `Dockerfile`
+4. Configura le environment variables (stesse chiavi di `.env.example`)
+5. Deploy
+
+Test locale opzionale del container:
+
+- Build: `docker build -t ecosignal-railway .`
+- Run: `docker run --rm -p 3000:3000 --env-file .env.local ecosignal-railway`
+
 ## Test eseguiti
 
 Verifiche eseguite sull'ambiente attuale:

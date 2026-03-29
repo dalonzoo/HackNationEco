@@ -1,0 +1,1 @@
+Per gestire dati sensibili e compliance europea (CSRD), usiamo un LLM EU AI Act compliant, addestrato su dati aperti". È un fortissimo elemento di differenziazione in ambito B2B Enterprise.
