@@ -1,555 +1,205 @@
 # EcoSignal Enterprise
 
-Piattaforma AI per trasformare dati ambientali complessi in decisioni operative per PMI italiane: da input aziendale e open data a azioni concrete, misurabili e rendicontabili.
+EcoSignal Enterprise is a Next.js prototype that helps small and midsize companies turn scattered operational and environmental data into concrete sustainability actions.
 
-Challenge di riferimento: **EcoSignal: dai dati al gesto** (Engineering).
+Instead of stopping at dashboards, the app guides a team through a simple flow: collect company inputs, estimate Scope 1/2/3 emissions, enrich the picture with territorial context, generate AI-supported recommendations, and export communication/compliance material.
 
----
+This repository was originally built for the Engineering challenge `EcoSignal: dai dati al gesto`, and it is now documented as a public project so new contributors can understand it quickly.
 
-## Pitch in 30 secondi
+## What problem it solves
 
-Le PMI hanno dati ambientali frammentati, poco interpretabili e poco utili per prendere decisioni rapide. EcoSignal Enterprise riduce questo gap in meno di 10 minuti con un flusso end-to-end:
+Many SMEs do not need more raw ESG data. They need help answering practical questions:
 
-1. acquisizione dati aziendali (upload o input guidato)
-2. calcolo baseline emissioni Scope 1/2/3 e score ESG
-3. integrazione contesto territoriale da open data
-4. azioni AI prioritarie con impatto CO2 ed economico
-5. output compliance-ready (briefing + report CSRD)
+- Where are our emissions and operational risks today?
+- Which actions should we prioritize first?
+- What is the expected environmental and business impact?
+- How can we communicate the result internally or for compliance work?
 
-Il risultato e' un passaggio concreto dal dato al gesto: non solo awareness, ma decisioni eseguibili.
+EcoSignal is a prototype for that workflow.
 
----
+## What the app does
 
-## Coerenza con i criteri di valutazione
+- Collects company data from manual input or uploaded files
+- Estimates a carbon baseline across Scope 1, Scope 2, and Scope 3
+- Calculates an ESG-style score from the onboarding data
+- Pulls territorial context from live weather/open data sources, with deterministic fallback data for demos
+- Generates prioritized actions with estimated CO2 reduction, savings, effort, and payback
+- Produces an audio briefing and a downloadable CSRD-style PDF report
+- Keeps the experience usable even when AI providers or third-party services are unavailable
 
-### 1) Coerenza con la challenge scelta
+## Product flow
 
-Requisito challenge | Come risponde EcoSignal
---- | ---
-Integrare dati ambientali da fonti aperte | Endpoint open data territoriale con fallback deterministico robusto.
-Tradurre dati in insight chiari | Dashboard Mission Control con viste progressive e KPI leggibili anche a non esperti.
-Suggerire comportamenti/scelte con impatto misurabile | Azioni AI con stima riduzione CO2, risparmio economico, difficolta', payback.
-Creare feedback loop nel tempo | Flusso missione + briefing + readiness compliance + roadmap 30 giorni.
-Essere accessibile | UI in italiano, percorso guidato, onboarding rapido, narrativa operativa.
+The app is organized around four views inside the Mission Control interface:
 
-### 2) Impatto sociale e benefici
+1. `SCANNER`
+   Company intake, source traceability, data upload, and baseline emissions.
+2. `TERRA`
+   Territorial context, climate signals, and sector-aware benchmarking.
+3. `ORBITA`
+   AI-generated recommendations and business/environmental trade-offs.
+4. `COMPLIANCE`
+   Readiness summary, audio briefing, and export of a CSRD-style report.
 
-- democratizza strumenti ESG per PMI che non hanno budget consulenziale elevato
-- accelera decisioni a impatto reale su emissioni, mobilita', energia e supply chain
-- migliora la qualita' delle decisioni locali grazie al contesto territoriale (aria, trend meteo, rischio climatico)
-- abilita filiere piu' trasparenti: PMI piu' pronte alla compliance diventano partner piu' affidabili per grandi aziende
+The current UI copy is mainly in Italian because the prototype was designed for Italian SMEs and judges, but the codebase and this README are now structured for broader public use.
 
-### 3) Chiarezza e completezza del prototipo
+## Screenshots
 
-- percorso demo completo da input a output finale
-- 4 pannelli funzionali con ruoli distinti: `SCANNER`, `TERRA`, `ORBITA`, `COMPLIANCE`
-- API dedicate per insight AI, open data, audio briefing e report CSRD
-- fallback gestiti per garantire continuita' demo anche con connettivita'/API parziali
+The repository now includes placeholder assets for four screenshots. Replace the SVG files in [`docs/screenshots`](./docs/screenshots) with real product captures when they are available.
 
-### 4) Qualita' dell'implementazione tecnica
+| Planned view | Placeholder file | What to capture |
+| --- | --- | --- |
+| Intake and onboarding | `docs/screenshots/01-intake-overview.svg` | The first screen, upload area, and company input flow |
+| Scanner baseline | `docs/screenshots/02-scanner-baseline.svg` | Scope 1/2/3 cards, source traceability, and baseline summary |
+| AI recommendations | `docs/screenshots/03-orbita-actions.svg` | Action cards with impact, savings, and payback |
+| Compliance output | `docs/screenshots/04-compliance-export.svg` | Readiness summary, audio briefing, and report export |
 
-- stack moderno (Next.js + TypeScript + API routes)
-- orchestrazione multi-agent con modalita' LLM reale e fallback locale
-- tipi dati espliciti per contratti applicativi e tracciabilita'
-- pipeline strutturata: ingestion -> carbon/esg -> AI insights -> compliance artifacts
+![Intake overview placeholder](docs/screenshots/01-intake-overview.png)
+![Scanner baseline placeholder](docs/screenshots/02-scanner-baseline.png)
+![Orbita actions placeholder](docs/screenshots/03-orbita-actions.png)
+![Compliance export placeholder](docs/screenshots/04-compliance-export.png)
 
-### 5) Privacy, bias, trasparenza
+## Tech stack
 
-- input parsing con allowlist campi e normalizzazione controllata
-- data lineage visibile per sorgenti e timestamp
-- output con breakdown esplicito Scope 1/2/3 e score ESG E/S/G
-- limiti dichiarati con roadmap di mitigazione (bias audit, governance dati, retention)
+- Next.js App Router
+- React 19
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- jsPDF
 
----
+Optional integrations:
 
-## Cosa fa il prototipo
+- Gemini or Regolo for LLM-based multi-agent recommendations
+- ElevenLabs for text-to-speech audio briefings
+- Open-Meteo for live territorial context
 
-### Mission Control a 4 pannelli
-
-- `SCANNER`: sorgenti dati, tracciabilita', baseline carbon
-- `TERRA`: segnali territoriali e benchmark contestuali
-- `ORBITA`: raccomandazioni AI con ROI ambientale/economico
-- `COMPLIANCE`: readiness CSRD, briefing audio, export report
-
-### Modalita' dati
-
-- input da file o manuale
-- dataset demo pronto per prova immediata
-- parsing operativo su CSV/JSON/TXT
-- supporto upload PDF/XLSX come evidenza (estrazione semantica avanzata in roadmap)
-
-### Modalita' AI
-
-- `multi-agent-llm` quando provider LLM disponibile
-- `multi-agent-fallback` quando non disponibile
-
----
-
-## Demo journey (3-5 minuti)
-
-1. **Avvio e ingestion**
-Carica un dataset aziendale (o usa demo) e avvia il flusso multi-agente.
-
-2. **SCANNER: baseline e tracciabilita'**
-Mostra sorgenti dati e baseline emissioni per Scope 1/2/3.
-
-3. **TERRA: contesto open data**
-Visualizza rischio climatico territoriale e segnali ambientali live/demo.
-
-4. **ORBITA: azioni prioritarie**
-Seleziona una raccomandazione e mostra KPI: CO2 evitata, risparmio, effort, payback.
-
-5. **COMPLIANCE: output finale**
-Genera briefing audio e report CSRD PDF con roadmap operativa.
-
-Messaggio finale da presentare alla giuria: EcoSignal rende operativa la sostenibilita' per PMI, collegando dati e comportamenti con evidenze misurabili.
-
----
-
-## Architettura tecnica
-
-### Stack
-
-- Frontend: Next.js App Router, React, TypeScript, Tailwind
-- Backend: Next.js API routes
-- AI: provider LLM (Regolo/Gemini con fallback), orchestrazione agenti
-- Audio: ElevenLabs
-- Report: jsPDF
-- Data layer: Supabase schema disponibile
-- Deploy: Docker + Railway
-
-### Flusso applicativo
+## Project structure
 
 ```text
-Input aziendale -> Document ingestion -> Carbon/ESG engine
--> Open data context -> AI orchestration
--> Action recommendations -> CSRD report + audio briefing
+app/
+  api/
+components/
+  mission-control/
+data/
+hooks/
+lib/
+  ai/
+supabase/
 ```
 
----
+Helpful files to start with:
 
-## Evidenze nel codice
+- [`app/page.tsx`](./app/page.tsx) mounts the main Mission Control experience
+- [`components/mission-control/MissionControlHome.tsx`](./components/mission-control/MissionControlHome.tsx) contains the core client flow
+- [`lib/document-ingestion.ts`](./lib/document-ingestion.ts) handles file parsing and normalization
+- [`lib/carbon.ts`](./lib/carbon.ts) calculates the carbon baseline
+- [`lib/esg.ts`](./lib/esg.ts) computes the ESG-style score
+- [`lib/open-data.ts`](./lib/open-data.ts) fetches live context and provides fallback demo data
+- [`lib/ai/insights-orchestrator.ts`](./lib/ai/insights-orchestrator.ts) coordinates recommendation generation
 
-- Ingestion e validazione: `lib/document-ingestion.ts`
-- Carbon footprint Scope 1/2/3: `lib/carbon.ts`
-- ESG scoring: `lib/esg.ts`
-- Open data + fallback: `lib/open-data.ts`
-- Tipi condivisi e contratti: `lib/types.ts`
-- Orchestrazione insight AI: `lib/ai/insights-orchestrator.ts`
-- API insight: `app/api/ai/insights/route.ts`
-- API contesto territoriale: `app/api/open-data/context/route.ts`
-- API briefing audio: `app/api/audio/briefing/route.ts`
-- API report CSRD: `app/api/reports/csrd/route.ts`
-- UI Mission Control: `components/mission-control/`
+## Quick start
 
----
-
-## Open data: stato integrazione
-
-Attuale in prototipo:
-
-- integrazione contesto meteo/climatico con fonte live quando disponibile
-- fallback deterministico per demo resiliente
-- distinzione esplicita tra sorgente live e demo
-
-Roadmap post-hackathon:
-
-- estensione dataset pubblici nazionali (es. indicatori ambientali territoriali piu' granulari)
-- benchmarking settoriale piu' approfondito per categoria ATECO
-
----
-
-## Privacy, bias, trasparenza (trust-by-design)
-
-Tema | Stato attuale | Mitigazione roadmap
---- | --- | ---
-Privacy by default | Gestione via variabili ambiente, no secret hardcoded | policy retention/cancellazione dati esplicita
-Trasparenza dati | Tracciabilita' sorgenti e timestamp | audit trail completo su decisioni e override
-Trasparenza modello | Output con breakdown e motivazioni operative | spiegazioni strutturate per ogni raccomandazione
-Bias settoriale | Benchmark semplificati per settore | bias audit periodico e mapping settoriale piu' robusto
-Robustezza demo | fallback deterministico multi-livello | monitoraggio qualita' predizioni in produzione
-
-Nota per giuria: il progetto preferisce trasparenza sui limiti rispetto a claim non verificabili.
-
----
-
-## Impatto misurabile (KPI di progetto)
-
-KPI target in validazione pilota:
-
-- tempo medio da onboarding a prima azione: < 10 minuti
-- numero azioni implementate per azienda in 30 giorni
-- riduzione stimata CO2 aggregata per portfolio PMI
-- risparmio economico stimato per azienda
-- incremento readiness compliance (baseline vs dopo 30 giorni)
-
----
-
-## Setup locale
-
-### Requisiti
+### Requirements
 
 - Node.js 20+
 - npm
 
-### Avvio rapido
+### Run locally
 
-1. Installa dipendenze:
+Copy `.env.example` to `.env.local`, then run:
 
 ```bash
 npm install
-```
-
-2. Configura variabili ambiente copiando `.env.example` in `.env.local`.
-
-3. Avvia in sviluppo:
-
-```bash
 npm run dev
 ```
 
-4. Verifica build:
+Then open `http://localhost:3000`.
 
-```bash
-npm run build
-```
+### Important note about environment variables
 
-5. Avvia build produzione:
+The app is designed to start even without every external service configured:
 
-```bash
-npm run start
-```
+- No LLM credentials: AI insights fall back to a deterministic local multi-agent mode
+- No ElevenLabs credentials: the audio endpoint returns a demo transcript instead of generated audio
+- No live open-data response: territorial context falls back to deterministic demo data
 
-### Variabili ambiente principali
+That means you can explore the product flow locally before wiring up external providers.
 
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in only what you need.
+
+### Core optional integrations
+
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
 - `REGOLO_API_KEY`
 - `REGOLO_API_URL`
-- `REGOLO_MODEL` (opzionale)
+- `REGOLO_MODEL`
 - `ELEVENLABS_API_KEY`
 - `ELEVENLABS_VOICE_ID`
+
+### App configuration
+
+- `NEXT_PUBLIC_CSRD_DEADLINE`
+
+### Included in `.env.example` for future extensions
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `OPENAQ_API_KEY`
 
----
-
-## Endpoint principali
-
-- `POST /api/ai/insights` -> genera insight multi-agent e azioni
-- `GET /api/open-data/context` -> recupera contesto ambientale territoriale
-- `POST /api/audio/briefing` -> genera briefing audio operativo
-- `POST /api/reports/csrd` -> genera report CSRD in PDF
-
----
-
-## Jury technical deep dive
-
-Questa sezione e' pensata per valutatori tecnici: mostra contratti API, logica computazionale e comportamento in fallback.
-
-### 1) Contratti API (request/response)
-
-#### POST /api/ai/insights
-
-Request (sintesi):
-
-```json
-{
-	"data": {
-		"companyName": "LogiTrans Srl",
-		"sector": "Logistica",
-		"atecoCode": "52.29",
-		"city": "Milano",
-		"employeesRange": "50-99",
-		"revenueRange": "10-25M",
-		"budgetRange": "100k-250k",
-		"facilities": 2,
-		"electricityKwh": 420000,
-		"gasM3": 58000,
-		"waterM3": 12000,
-		"dieselKm": 860000,
-		"petrolKm": 110000,
-		"electricKm": 90000,
-		"flightsKm": 65000,
-		"trainKm": 42000,
-		"localSuppliersPct": 48,
-		"wasteKg": 92000,
-		"recyclingPct": 62,
-		"travelPlanning": {
-			"annualTrips": 380,
-			"employeeTravelers": 42,
-			"shortHaulFlightSharePct": 46,
-			"railEligibleTripSharePct": 44,
-			"advanceBookingDays": 11,
-			"virtualMeetingSharePct": 28,
-			"hotelPolicyCoveragePct": 52,
-			"approvalWorkflowCoveragePct": 47,
-			"lastMinuteBookingSharePct": 31,
-			"weekendExtensionRiskPct": 18,
-			"hotelNightsAnnual": 510,
-			"preferredRailCorridors": ["MI-RO", "MI-BO"],
-			"topTripReasons": ["clienti", "fornitori"]
-		}
-	},
-	"openData": {
-		"source": "live",
-		"city": "Milano",
-		"sector": "Logistica",
-		"airQualityIndex": 54,
-		"airQualityLabel": "Moderata",
-		"weeklyTemperatureDelta": 2.3,
-		"climateRiskLabel": "Stress idrico",
-		"notes": ["..."],
-		"incentives": ["..."]
-	}
-}
-```
-
-Response (chiavi principali):
-
-```json
-{
-	"carbon": {
-		"scope1": 0,
-		"scope2": 0,
-		"scope3": 0,
-		"total": 0,
-		"benchmarkTotal": 0
-	},
-	"score": {
-		"total": 0,
-		"environment": 0,
-		"social": 0,
-		"governance": 0
-	},
-	"actions": [
-		{
-			"id": "renewable-energy",
-			"title": "...",
-			"priority": 1,
-			"difficulty": 2,
-			"reductionTco2": 12,
-			"annualSavingEur": 3200,
-			"paybackMonths": 7,
-			"incentive": "..."
-		}
-	],
-	"summary": ["..."],
-	"complianceSummary": {
-		"headline": "...",
-		"detail": "...",
-		"focus": "...",
-		"missingItems": ["..."],
-		"readinessPct": 68
-	},
-	"orchestrationMode": "multi-agent-llm",
-	"agentTrace": [
-		{ "agent": "planner", "mode": "llm", "title": "planner completed", "content": "..." }
-	],
-	"source": "regolo-multi-agent",
-	"warning": "...",
-	"systemPrompt": "..."
-}
-```
-
-Note operative:
-
-- provider LLM tentati in sequenza: Gemini, poi Regolo
-- in caso errore provider, fallback deterministico locale con `orchestrationMode: multi-agent-fallback`
-
-#### GET /api/open-data/context?city=Milano&sector=Manifattura
-
-Response:
-
-```json
-{
-	"source": "live",
-	"city": "Milano",
-	"sector": "Manifattura",
-	"airQualityIndex": 49,
-	"airQualityLabel": "Moderata",
-	"weeklyTemperatureDelta": 1.8,
-	"climateRiskLabel": "Transizione monitorata",
-	"notes": ["..."],
-	"incentives": ["..."]
-}
-```
-
-#### POST /api/audio/briefing
-
-Request (sintesi):
-
-```json
-{
-	"companyName": "LogiTrans Srl",
-	"summary": ["..."],
-	"actions": [{ "id": "renewable-energy", "title": "..." }],
-	"openData": {
-		"source": "live",
-		"city": "Milano",
-		"sector": "Logistica",
-		"airQualityIndex": 54,
-		"airQualityLabel": "Moderata",
-		"weeklyTemperatureDelta": 2.3,
-		"climateRiskLabel": "Stress idrico",
-		"notes": ["..."],
-		"incentives": ["..."]
-	},
-	"complianceSummary": {
-		"headline": "...",
-		"detail": "...",
-		"focus": "...",
-		"missingItems": ["..."],
-		"readinessPct": 68
-	}
-}
-```
-
-Response:
-
-```json
-{
-	"source": "elevenlabs",
-	"transcript": "...",
-	"audioUrl": "data:audio/mpeg;base64,...",
-	"voiceId": "...",
-	"voiceName": "...",
-	"generatedAt": "2026-03-29T12:00:00.000Z",
-	"warning": "..."
-}
-```
-
-Note operative:
-
-- se `ELEVENLABS_VOICE_ID` non valido, tenta una voce alternativa disponibile
-- se ElevenLabs non disponibile, ritorna transcript demo con `warning`
-
-#### POST /api/reports/csrd
-
-Input: `data`, `carbon`, `score`, `actions`, opzionali `openData`, `complianceSummary`.
-
-Output:
-
-- `Content-Type: application/pdf`
-- `Content-Disposition: attachment; filename="ecosignal-csrd-<company>.pdf"`
-
-### 2) Orchestrazione multi-agent
-
-Pipeline implementata:
-
-1. calcolo baseline (`calculateCarbonFootprint`) e score ESG (`calculateEsgScore`)
-2. costruzione summary e compliance summary
-3. esecuzione agente `planner`
-4. esecuzione in parallelo agenti `benchmark`, `compliance`, `action`
-5. risposta con `agentTrace` completo
-
-Se il runner LLM fallisce in qualunque fase, il risultato resta completo ma in modalita' fallback deterministica.
-
-### 3) Logica numerica principale
-
-Carbon model:
-
-- Scope 1 = gas + diesel + petrol
-- Scope 2 = elettricita'
-- Scope 3 = voli + treno + rifiuti + penalita' filiera non locale
-
-Benchmark settoriale (fattore sul totale):
-
-- logistica: 1.08
-- servizi: 0.82
-- default: 0.94
-
-ESG score:
-
-- `Environment = 0.55 * emissionScore + 0.45 * recyclingScore`
-- `Social = 0.60 * supplierScore + 0.40 * (100 - weekendExtensionRiskPct)`
-- `Governance = travelGovernance`
-- `Total = 0.50 * Environment + 0.25 * Social + 0.25 * Governance`
-
-### 4) Data validation e ingestion
-
-- parsing supportato: JSON, CSV, TXT
-- allowlist stretta su campi top-level (`allowedTopLevelKeys`)
-- normalizzazione numerica con gestione separatori IT (`1.234,56` -> `1234.56`)
-- `applyMode`:
-	- `replace` su payload JSON completo
-	- `merge` su patch parziale
-
-### 5) Affidabilita' e fallback
-
-- Open data:
-	- prova sorgente live Open-Meteo
-	- fallback demo deterministico hash-based per output coerenti tra run
-- AI insight:
-	- catena provider LLM + fallback locale multi-agent
-- Audio:
-	- tenta voce configurata, poi voce alternativa, poi transcript demo
-
-Impatto tecnico: demo stabile anche in condizioni di rete/API non ideali.
-
-### 6) Note per valutazione tecnica
-
-- il prototipo privilegia robustezza e trasparenza dello stato (`source`, `warning`, `orchestrationMode`)
-- i contratti TypeScript sono espliciti per ridurre ambiguita' tra frontend e backend
-- i limiti attuali sono dichiarati e mappati a roadmap (bias audit, granularita' fattori emissivi, governance dati)
-
----
-
-## Deploy su Railway (Docker)
-
-Il repository include:
-
-- `Dockerfile` multi-stage con output standalone
-- `railway.json` per build/deploy
-
-Passi:
-
-1. collega repository a Railway
-2. configura variabili ambiente
-3. deploy automatico via Dockerfile
-
-Test locale container (opzionale):
-
-```bash
-docker build -t ecosignal-railway .
-docker run --rm -p 3000:3000 --env-file .env.local ecosignal-railway
-```
-
----
-
-## Struttura repository (sintesi)
-
-```text
-app/
-	api/
-components/
-	mission-control/
-lib/
-	ai/
-hooks/
-data/
-supabase/
-```
-
----
-
-## Limiti attuali
-
-- parsing documentale avanzato PDF/XLSX non ancora completo
-- persistenza Supabase non ancora esposta end-to-end nella UI finale
-- agent trace disponibile nei dati ma non ancora con pannello diagnostico dedicato
-
----
-
-## Roadmap post-hackathon
-
-1. Estensione open data nazionali e territoriali ad alta granularita'
-2. Miglioramento modelli emissivi con fattori piu' specifici per settore/processo
-3. Bias audit framework e policy di governance dati
-4. Integrazione completa persistenza (aziende, azioni, report) su Supabase
-5. Export compliance multi-standard oltre CSRD
-
----
-
-## Perche' questa soluzione e' coerente con "dai dati al gesto"
-
-EcoSignal non si ferma alla visualizzazione del problema ambientale: trasforma dati in un piano di azione con priorita', impatto stimato e strumenti operativi per esecuzione e rendicontazione. Questo e' il ponte mancante tra intenzione e comportamento reale.
+Some of these values are present for roadmap work and are not required for the current local demo flow.
+
+## Supported input formats
+
+Current ingestion support:
+
+- `.json`
+- `.csv`
+- `.txt`
+
+Behavior:
+
+- Full JSON payloads can replace the current onboarding dataset
+- CSV and TXT files are parsed as partial updates
+- Unsupported formats are still registered as evidence, even if they are not deeply parsed yet
+
+## API overview
+
+Main routes exposed by the Next.js app:
+
+- `POST /api/ai/insights` generates emissions summary, score, actions, and compliance summary
+- `GET /api/open-data/context` fetches territorial context for a city and sector
+- `POST /api/audio/briefing` builds a spoken summary, with demo fallback
+- `POST /api/reports/csrd` exports a PDF report
+
+## Reliability and fallback behavior
+
+One of the strongest qualities of this prototype is that it remains demoable when external dependencies fail.
+
+- LLM providers are attempted first; if they fail, the app returns structured local fallback insights
+- Open data is fetched live when available; otherwise a deterministic context is generated
+- Audio synthesis uses ElevenLabs when configured, otherwise it returns a text briefing
+
+This makes the repository easy to run for first-time contributors and dependable during demos.
+
+## Current limitations
+
+- The UI text is still mostly Italian
+- Advanced PDF/XLSX semantic extraction is not implemented yet
+- Supabase persistence is scaffolded but not wired end-to-end in the visible product flow
+- Agent traces are returned in data responses, but there is no dedicated diagnostic UI yet
+
+## Suggested next steps for contributors
+
+- Replace the screenshot placeholders with real product captures
+- Add English UI copy or localization support
+- Expand document ingestion beyond JSON/CSV/TXT
+- Expose persistence and saved company sessions end to end
+- Add tests around ingestion, scoring, and API fallbacks
+
+## Origin
+
+EcoSignal Enterprise started as a hackathon prototype focused on helping Italian SMEs move from environmental data to operational action. The current codebase already shows the core product idea; this README is meant to make that idea understandable to anyone landing on the repository for the first time.
